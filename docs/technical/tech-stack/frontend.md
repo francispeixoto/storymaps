@@ -42,7 +42,9 @@ client/
 │   │   ├── components/          # Reusable components
 │   │   ├── services/            # API services (map.service.ts, activity.service.ts, action.service.ts)
 │   │   ├── models/             # TypeScript interfaces (index.ts)
-│   │   ├── pages/             # Route pages (home-page.component.ts)
+│   │   ├── pages/             # Route pages
+│   │   │   ├── home-page.component.ts    # Home page with map list
+│   │   │   └── map-create.component.ts   # Create new map form
 │   │   ├── app.component.ts  # Root component
 │   │   ├── app.config.ts    # App configuration
 │   │   └── app.routes.ts  # Route definitions
@@ -61,24 +63,70 @@ client/
 
 ## Key Components
 
-### MapListComponent
+### HomePageComponent
 
-Displays all maps in a card grid layout.
+Displays the map list with a "Create Map" button.
 
 ```typescript
 @Component({
-  selector: 'app-map-list',
+  selector: 'app-home-page',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
   template: `
-    <div class="grid grid-cols-3 gap-4">
-      <div *ngFor="let map of maps" class="card">
-        {{ map.name }}
+    <div>
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold">Your Maps</h2>
+        <a routerLink="/maps/create" class="btn-primary">
+          Create Map
+        </a>
+      </div>
+
+      <div *ngIf="maps.length > 0" class="grid grid-cols-3 gap-4">
+        <div *ngFor="let map of maps" class="card">
+          {{ map.name }}
+        </div>
       </div>
     </div>
   `
 })
-export class MapListComponent {
+export class HomePageComponent implements OnInit {
   maps: Map[] = [];
   // Load maps on init
+}
+```
+
+### MapCreateComponent
+
+Form for creating a new map with name and description fields.
+
+```typescript
+@Component({
+  selector: 'app-map-create',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <form [formGroup]="mapForm" (ngSubmit)="onSubmit()">
+      <input formControlName="name" placeholder="Map Name" />
+      <textarea formControlName="description" placeholder="Description"></textarea>
+      <button type="submit" [disabled]="mapForm.invalid">Create Map</button>
+    </form>
+  `
+})
+export class MapCreateComponent implements OnInit {
+  mapForm: FormGroup;
+  
+  constructor(private fb: FormBuilder, private mapService: MapService) {
+    this.mapForm = this.fb.group({
+      name: ['', Validators.required],
+      description: ['']
+    });
+  }
+  
+  onSubmit(): void {
+    if (this.mapForm.valid) {
+      this.mapService.create(this.mapForm.value).subscribe();
+    }
+  }
 }
 ```
 
@@ -123,7 +171,14 @@ Visual story matrix display.
 export class MapViewerComponent {}
 ```
 
-## Services
+## Routes
+
+| Path | Component | Description |
+|------|-----------|-------------|
+| `/` | HomePageComponent | Map list with create button |
+| `/maps/create` | MapCreateComponent | Create new map form |
+
+## Running the Frontend
 
 ### MapService
 
@@ -131,6 +186,8 @@ export class MapViewerComponent {}
 @Injectable({ providedIn: 'root' })
 export class MapService {
   private apiUrl = 'http://localhost:3000/api/maps';
+
+  constructor(private http: HttpClient) {}
 
   getAll(): Observable<Map[]> {
     return this.http.get<Map[]>(this.apiUrl);
@@ -140,16 +197,18 @@ export class MapService {
     return this.http.get<Map>(`${this.apiUrl}/${id}`);
   }
 
-  create(map: CreateMapDto): Observable<Map> {
-    return this.http.post<Map>(this.apiUrl, map);
+  create(map: Partial<Map>): Observable<Map> {
+    // Auto-generate UID using timestamp
+    const uid = `maps-${Date.now()}`;
+    return this.http.post<Map>(this.apiUrl, { uid, ...map });
   }
 
-  update(id: number, map: UpdateMapDto): Observable<Map> {
+  update(id: number, map: Partial<Map>): Observable<Map> {
     return this.http.put<Map>(`${this.apiUrl}/${id}`, map);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
 ```
