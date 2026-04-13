@@ -34,6 +34,7 @@
 - Create branch from `main` for each issue
 - Commit changes to feature branch
 - Create PR for review when work is complete
+- **All branch reviews must be done formally through GitHub Pull Request**
 - **Do NOT merge to main without explicit approval**
 
 ## Development Commands
