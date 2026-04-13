@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.server
+    volumes:
+      - ./server/data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - storymaps-network
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.client
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+    networks:
+      - storymaps-network
+    restart: unless-stopped
+
+networks:
+  storymaps-network:
+    driver: bridge
