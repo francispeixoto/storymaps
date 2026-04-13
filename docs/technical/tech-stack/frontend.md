@@ -222,6 +222,33 @@ activityForm = this.fb.group({
 | Want | `bg-blue-100 text-blue-800` | Blue |
 | Nice | `bg-green-100 text-green-800` | Green |
 
+## Action Display
+
+In view mode, actions are displayed inside each activity with expand/collapse functionality:
+
+- **Expand/collapse**: Click activity to toggle action list visibility
+- **Actor badges**: PM (purple), Developer (yellow), DevOps (orange)
+- **Priority badges**: Need (red), Want (blue), Nice (green)
+
+### Actor Styling
+
+| Actor | CSS Class | Badge Color |
+|-------|-----------|-------------|
+| PM | `bg-purple-100 text-purple-800` | Purple |
+| Developer | `bg-yellow-100 text-yellow-800` | Yellow |
+| DevOps | `bg-orange-100 text-orange-800` | Orange |
+
+### ActionService
+
+The ActionService auto-generates UIDs for new actions:
+
+```typescript
+create(action: Partial<Action>): Observable<Action> {
+  const uid = `maps-${activityId}-act-${Date.now()}`;
+  return this.http.post<Action>(this.apiUrl, { uid, ...action });
+}
+```
+
 ## Running the Frontend
 
 ### MapService
