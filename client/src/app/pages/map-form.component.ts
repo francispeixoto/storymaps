@@ -19,6 +19,12 @@ import { Map, Activity, Action } from '../models';
         </h2>
         <div class="flex gap-2" *ngIf="mode === 'view'">
           <button
+            (click)="goToMatrix()"
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+          >
+            Matrix
+          </button>
+          <button
             (click)="goToEdit()"
             class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
           >
@@ -238,13 +244,8 @@ export class MapFormComponent implements OnInit {
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.mapId = +params['id'];
-        if (this.mode === 'create') {
-          this.mode = 'view';
-        }
-        if (this.mode !== 'create') {
-          this.loadMap();
-          this.loadActivities();
-        }
+        this.loadMap();
+        this.loadActivities();
       }
     });
   }
@@ -384,6 +385,12 @@ export class MapFormComponent implements OnInit {
   goToEdit(): void {
     if (this.mapId) {
       this.router.navigate(['/maps', this.mapId, 'edit']);
+    }
+  }
+
+  goToMatrix(): void {
+    if (this.mapId) {
+      this.router.navigate(['/maps', this.mapId, 'matrix']);
     }
   }
 
