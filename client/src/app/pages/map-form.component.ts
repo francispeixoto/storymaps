@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MapService } from '../services/map.service';
 import { ActivityService } from '../services/activity.service';
-import { Map, Activity } from '../models';
+import { ActionService } from '../services/action.service';
+import { Map, Activity, Action } from '../models';
 
 @Component({
   selector: 'app-map-form',
@@ -45,14 +46,33 @@ import { Map, Activity } from '../models';
         <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
           <h4 class="text-lg font-medium text-gray-900 mb-4">Activities</h4>
           <div *ngIf="activities.length === 0" class="text-gray-500">No activities yet.</div>
-          <div *ngFor="let activity of activities" class="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
-            <div>
-              <span class="font-medium">{{ activity.name }}</span>
-              <span [class]="getPriorityClass(activity.priority)" class="ml-2 px-2 py-0.5 text-xs rounded">
-                {{ activity.priority }}
-              </span>
+          <div *ngFor="let activity of activities" class="border-b border-gray-200 last:border-0 py-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-medium">{{ activity.name }}</span>
+                <span [class]="getPriorityClass(activity.priority)" class="ml-2 px-2 py-0.5 text-xs rounded">
+                  {{ activity.priority }}
+                </span>
+              </div>
+              <button
+                type="button"
+                (click)="toggleActivityActions(activity.id)"
+                class="text-sm text-gray-500 hover:text-gray-700"
+              >
+                {{ expandedActivityId === activity.id ? '▼' : '▶' }} {{ getActivityActions(activity.id).length }} actions
+              </button>
             </div>
-            <span class="text-sm text-gray-400">{{ activity.uid }}</span>
+            <!-- Actions List (collapsed by default) -->
+            <div *ngIf="expandedActivityId === activity.id" class="mt-2 ml-4 pl-4 border-l-2 border-gray-200">
+              <div *ngFor="let action of getActivityActions(activity.id)" class="flex items-center justify-between py-1 text-sm">
+                <div>
+                  <span>{{ action.name }}</span>
+                  <span [class]="getActorClass(action.actor)" class="ml-2 px-2 py-0.5 text-xs rounded">{{ action.actor }}</span>
+                </div>
+                <span [class]="getPriorityClass(action.priority)" class="px-2 py-0.5 text-xs rounded">{{ action.priority }}</span>
+              </div>
+              <div *ngIf="getActivityActions(activity.id).length === 0" class="text-gray-400 text-sm py-1">No actions</div>
+            </div>
           </div>
         </div>
       </div>
@@ -187,12 +207,15 @@ export class MapFormComponent implements OnInit {
   map: Map | null = null;
   mapId: number | null = null;
   activities: Activity[] = [];
+  actionsByActivity: { [activityId: number]: Action[] } = {};
+  expandedActivityId: number | null = null;
   showActivityForm = false;
 
   constructor(
     private fb: FormBuilder,
     private mapService: MapService,
     private activityService: ActivityService,
+    private actionService: ActionService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -248,9 +271,31 @@ export class MapFormComponent implements OnInit {
   loadActivities(): void {
     if (!this.mapId) return;
     this.activityService.getAll(this.mapId).subscribe({
-      next: (activities) => this.activities = activities,
+      next: (activities) => {
+        this.activities = activities;
+        this.loadActionsForActivities(activities);
+      },
       error: (err) => console.error('Error loading activities:', err)
     });
+  }
+
+  loadActionsForActivities(activities: Activity[]): void {
+    activities.forEach(activity => {
+      this.actionService.getAll(activity.id).subscribe({
+        next: (actions) => {
+          this.actionsByActivity[activity.id] = actions;
+        },
+        error: (err) => console.error('Error loading actions:', err)
+      });
+    });
+  }
+
+  getActivityActions(activityId: number): Action[] {
+    return this.actionsByActivity[activityId] || [];
+  }
+
+  toggleActivityActions(activityId: number): void {
+    this.expandedActivityId = this.expandedActivityId === activityId ? null : activityId;
   }
 
   addActivity(): void {
@@ -291,6 +336,15 @@ export class MapFormComponent implements OnInit {
       case 'Need': return 'bg-red-100 text-red-800';
       case 'Want': return 'bg-blue-100 text-blue-800';
       case 'Nice': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  getActorClass(actor: string): string {
+    switch (actor) {
+      case 'PM': return 'bg-purple-100 text-purple-800';
+      case 'Developer': return 'bg-yellow-100 text-yellow-800';
+      case 'DevOps': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   }
