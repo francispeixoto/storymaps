@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Map } from '../models';
 
 @Injectable({
@@ -20,7 +20,8 @@ export class MapService {
   }
 
   create(map: Partial<Map>): Observable<Map> {
-    return this.http.post<Map>(this.apiUrl, map);
+    const uid = `maps-${Date.now()}`;
+    return this.http.post<Map>(this.apiUrl, { uid, ...map });
   }
 
   update(id: number, map: Partial<Map>): Observable<Map> {
