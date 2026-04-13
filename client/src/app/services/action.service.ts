@@ -21,7 +21,8 @@ export class ActionService {
   }
 
   create(action: Partial<Action>): Observable<Action> {
-    return this.http.post<Action>(this.apiUrl, action);
+    const uid = `maps-${(action as any).activity_id}-act-${Date.now()}`;
+    return this.http.post<Action>(this.apiUrl, { uid, ...action });
   }
 
   update(id: number, action: Partial<Action>): Observable<Action> {
