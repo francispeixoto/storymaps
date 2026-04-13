@@ -36,12 +36,27 @@ module.exports = {
 ### Angular Structure
 
 ```
-src/app/
-├── components/          # Reusable components
-├── services/             # API services
-├── models/              # TypeScript interfaces
-├── pages/               # Route pages
-└── app.component.ts     # Root component
+client/
+├── src/
+│   ├── app/
+│   │   ├── components/          # Reusable components
+│   │   ├── services/            # API services (map.service.ts, activity.service.ts, action.service.ts)
+│   │   ├── models/             # TypeScript interfaces (index.ts)
+│   │   ├── pages/             # Route pages (home-page.component.ts)
+│   │   ├── app.component.ts  # Root component
+│   │   ├── app.config.ts    # App configuration
+│   │   └── app.routes.ts  # Route definitions
+│   ├── assets/
+│   ├── environments/
+│   ├── styles.css             # Tailwind directives
+│   ├── index.html
+│   └── main.ts
+├── angular.json
+├── tailwind.config.js
+├── postcss.config.js
+├── package.json
+├── tsconfig.json
+└── .gitignore
 ```
 
 ## Key Components
@@ -173,15 +188,27 @@ export interface Action {
 
 ## Running the Frontend
 
+### Development
+
 ```bash
-ng serve
+cd client
+npm install
+npm start
 # Visit http://localhost:4200
+```
+
+### Production
+
+```bash
+cd client
+npm install
+npm run build
+# Production build output in dist/storymaps-client/
 ```
 
 ## Building for Production
 
 ```bash
-ng build --configuration=production
+npm run build
+# The production build output is in dist/storymaps-client/
 ```
-
-The production build output is in `dist/client`.

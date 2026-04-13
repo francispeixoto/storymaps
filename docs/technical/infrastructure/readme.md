@@ -10,11 +10,20 @@ The application uses Docker containers to package the frontend, backend, and dat
 
 | Service | Container | Port | Description |
 |---------|-----------|------|-------------|
-| client | Angular app | 80/443 | Frontend web server |
+| client | Angular app | 80 | Frontend web server (via nginx) |
 | server | Express API | 3000 | Backend REST API |
-| nginx | Reverse proxy | 80 | Routes requests to client and server |
+| nginx | Reverse proxy | 80 | Routes requests to client and server (port 8080 exposed) |
 
 ## Docker Files
+
+### Directory Structure
+
+```
+docker/
+├── Dockerfile.server     # Node.js Alpine container for Express
+├── Dockerfile.client    # Multi-stage build for Angular + nginx
+└── nginx.conf          # Reverse proxy configuration
+```
 
 ### Client Dockerfile
 
@@ -22,15 +31,19 @@ The application uses Docker containers to package the frontend, backend, and dat
 FROM node:18-alpine AS builder
 
 WORKDIR /app
+
 COPY client/package*.json ./
 RUN npm ci
+
 COPY client/ ./
 RUN npm run build
 
 FROM nginx:alpine
-COPY --from=builder /app/dist/client /usr/share/nginx/html
+COPY --from=builder /app/dist/storymaps-client/browser /usr/share/nginx/html
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
@@ -40,15 +53,16 @@ CMD ["nginx", "-g", "daemon off;"]
 FROM node:18-alpine
 
 WORKDIR /app
+
 COPY server/package*.json ./
 RUN npm ci --only=production
-COPY server/ ./
 
-# Create database directory
+COPY server/ ./
 RUN mkdir -p /app/data
 
 EXPOSE 3000
-CMD ["node", "src/index.js"]
+
+CMD ["node", "dist/index.js"]
 ```
 
 ### Nginx Configuration
