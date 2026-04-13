@@ -194,8 +194,33 @@ export class MapViewerComponent {}
 |------|-----------|-------------|
 | `/` | HomePageComponent | Map list with create button |
 | `/maps/create` | MapFormComponent | Create new map form |
-| `/maps/:id` | MapFormComponent | View map details |
-| `/maps/:id/edit` | MapFormComponent | Edit existing map |
+| `/maps/:id` | MapFormComponent | View map with activities |
+| `/maps/:id/edit` | MapFormComponent | Edit map and manage activities |
+
+## Activity Management
+
+The MapFormComponent includes activity management in view and edit modes:
+
+- **View mode**: Display activities with priority badges
+- **Edit mode**: Add/delete activities with name and priority
+- **Priority badges**: Need (red), Want (blue), Nice (green)
+
+### Activity Form
+
+```typescript
+activityForm = this.fb.group({
+  name: ['', Validators.required],
+  priority: ['Need', Validators.required]
+});
+```
+
+### Priority Styling
+
+| Priority | CSS Class | Badge Color |
+|----------|-----------|-------------|
+| Need | `bg-red-100 text-red-800` | Red |
+| Want | `bg-blue-100 text-blue-800` | Blue |
+| Nice | `bg-green-100 text-green-800` | Green |
 
 ## Running the Frontend
 
