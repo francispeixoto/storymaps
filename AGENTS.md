@@ -35,6 +35,7 @@
 - Commit changes to feature branch
 - Create PR for review when work is complete
 - **All branch reviews must be done formally through GitHub Pull Request**
+- **When PR is approved, update relevant documentation to reflect implementation**
 - **Do NOT merge to main without explicit approval**
 
 ## Development Commands
