@@ -37,6 +37,7 @@
 - **All branch reviews must be done formally through GitHub Pull Request**
 - **When PR is approved, update relevant documentation to reflect implementation**
 - **Post-merge doc updates: create a new commit on main branch with message referencing the PR ID (e.g., "docs: update X (#PR-ID)")**
+- **When PR is merged, close the relevant issue**
 - **Do NOT merge to main without explicit approval**
 
 ## Development Commands
