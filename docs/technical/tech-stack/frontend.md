@@ -44,7 +44,8 @@ client/
 │   │   ├── models/             # TypeScript interfaces (index.ts)
 │   │   ├── pages/             # Route pages
 │   │   │   ├── home-page.component.ts    # Home page with map list
-│   │   │   └── map-create.component.ts   # Create new map form
+│   │   │   ├── map-form.component.ts      # Create/Edit/View map form
+│   │   │   └── map-create.component.ts     # Create new map form (legacy)
 │   │   ├── app.component.ts  # Root component
 │   │   ├── app.config.ts    # App configuration
 │   │   └── app.routes.ts  # Route definitions
@@ -95,37 +96,53 @@ export class HomePageComponent implements OnInit {
 }
 ```
 
-### MapCreateComponent
+### MapFormComponent
 
-Form for creating a new map with name and description fields.
+Unified component for creating, editing, and viewing maps. Uses route data to determine mode.
 
 ```typescript
 @Component({
-  selector: 'app-map-create',
+  selector: 'app-map-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <form [formGroup]="mapForm" (ngSubmit)="onSubmit()">
+    <div *ngIf="mode === 'view' && map">
+      <h3>{{ map.name }}</h3>
+      <button (click)="goToEdit()">Edit</button>
+    </div>
+    <form *ngIf="mode !== 'view'" [formGroup]="mapForm" (ngSubmit)="onSubmit()">
       <input formControlName="name" placeholder="Map Name" />
       <textarea formControlName="description" placeholder="Description"></textarea>
-      <button type="submit" [disabled]="mapForm.invalid">Create Map</button>
+      <button type="submit" [disabled]="mapForm.invalid">
+        {{ mode === 'edit' ? 'Update Map' : 'Create Map' }}
+      </button>
     </form>
   `
 })
-export class MapCreateComponent implements OnInit {
-  mapForm: FormGroup;
+export class MapFormComponent implements OnInit {
+  mode: 'create' | 'edit' | 'view' = 'create';
   
-  constructor(private fb: FormBuilder, private mapService: MapService) {
+  constructor(
+    private fb: FormBuilder, 
+    private mapService: MapService,
+    private route: ActivatedRoute
+  ) {
     this.mapForm = this.fb.group({
       name: ['', Validators.required],
       description: ['']
     });
   }
   
-  onSubmit(): void {
-    if (this.mapForm.valid) {
-      this.mapService.create(this.mapForm.value).subscribe();
-    }
+  ngOnInit(): void {
+    this.route.data.subscribe(data => {
+      this.mode = data['mode'] || 'create';
+    });
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.mode = 'view';
+        // Load map by ID
+      }
+    });
   }
 }
 ```
@@ -176,7 +193,9 @@ export class MapViewerComponent {}
 | Path | Component | Description |
 |------|-----------|-------------|
 | `/` | HomePageComponent | Map list with create button |
-| `/maps/create` | MapCreateComponent | Create new map form |
+| `/maps/create` | MapFormComponent | Create new map form |
+| `/maps/:id` | MapFormComponent | View map details |
+| `/maps/:id/edit` | MapFormComponent | Edit existing map |
 
 ## Running the Frontend
 
