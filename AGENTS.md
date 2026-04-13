@@ -19,6 +19,15 @@
 2. Check for existing instruction files (`.cursorrules`, `.github/copilot-instructions.md`)
 3. Inspect CI workflows and task runner config for developer commands
 
+## Development Workflow
+
+- Every build/feature action must update all relevant documentation:
+  - Product story maps: `docs/product/maps/` (existing structure)
+  - Technical docs: `docs/technical/` (future)
+  - User guides: `docs/user/` (future)
+  - Project root docs: (future documentation at root level)
+- Documentation changes follow the same PR/commit as the code they document
+
 ## Development Commands
 
 > TODO: Add commands after code is added
