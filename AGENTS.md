@@ -28,6 +28,14 @@
   - Project root docs: (future documentation at root level)
 - Documentation changes follow the same PR/commit as the code they document
 
+## Branching Strategy
+
+- Use GitFlow: `feature/{issue-number}-{description}` for issue work
+- Create branch from `main` for each issue
+- Commit changes to feature branch
+- Create PR for review when work is complete
+- **Do NOT merge to main without explicit approval**
+
 ## Development Commands
 
 > TODO: Add commands after code is added
