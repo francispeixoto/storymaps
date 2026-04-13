@@ -25,14 +25,15 @@ import { Map } from '../models';
       </div>
 
       <div *ngIf="maps.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div
+        <a
           *ngFor="let map of maps"
-          class="bg-white rounded-lg shadow p-4 border border-gray-200"
+          [routerLink]="['/maps', map.id]"
+          class="block bg-white rounded-lg shadow p-4 border border-gray-200 hover:border-indigo-500 cursor-pointer transition-colors"
         >
           <h3 class="text-lg font-medium text-gray-900">{{ map.name }}</h3>
           <p *ngIf="map.description" class="mt-1 text-sm text-gray-500">{{ map.description }}</p>
           <p class="mt-2 text-xs text-gray-400">UID: {{ map.uid }}</p>
-        </div>
+        </a>
       </div>
     </div>
   `
