@@ -44,10 +44,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "storymaps-client:production"
+              "buildTarget": "storymaps-client:build:production"
             },
             "development": {
-              "buildTarget": "storymaps-client:development"
+              "buildTarget": "storymaps-client:build:development"
             }
           },
           "defaultConfiguration": "development"
