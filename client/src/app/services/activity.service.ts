@@ -21,7 +21,8 @@ export class ActivityService {
   }
 
   create(activity: Partial<Activity>): Observable<Activity> {
-    return this.http.post<Activity>(this.apiUrl, activity);
+    const uid = `maps-${(activity as any).map_id}-act-${Date.now()}`;
+    return this.http.post<Activity>(this.apiUrl, { uid, ...activity });
   }
 
   update(id: number, activity: Partial<Activity>): Observable<Activity> {
