@@ -55,6 +55,9 @@ client/
 │   │   ├── app.component.ts  # Root component
 │   │   ├── app.config.ts    # App configuration
 │   │   └── app.routes.ts  # Route definitions
+│   ├── environments/          # Environment configuration
+│   │   ├── environment.ts          # Development config
+│   │   └── environment.prod.ts    # Production config
 │   ├── styles.css             # Tailwind + custom scrollbars
 │   ├── index.html
 │   └── main.ts
@@ -356,12 +359,60 @@ export class MapMatrixComponent {}
 
 ## Running the Frontend
 
-### MapService
+### Angular Environment Configuration
+
+StoryMaps uses Angular's environment system to manage API URLs across different deployment targets.
+
+#### Environment Files
+
+- **Development** (`src/environments/environment.ts`):
+  ```typescript
+  export const environment = {
+    production: false,
+    apiUrl: 'http://localhost:3000/api'
+  };
+  ```
+
+- **Production** (`src/environments/environment.prod.ts`):
+  ```typescript
+  export const environment = {
+    production: true,
+    apiUrl: '/api'
+  };
+  ```
+
+#### How to Use
+
+Import environment in services:
+```typescript
+import { environment } from '../../environments/environment';
+
+private apiUrl = `${environment.apiUrl}/maps`;
+```
+
+#### Build Targets
+
+| Command | Environment Used | API URL |
+|---------|-------------------|---------|
+| `npm run dev` | development | `http://localhost:3000/api` |
+| `npm run build` | production | `/api` |
+
+The file replacements are configured in `angular.json`:
+```json
+"fileReplacements": [
+  {
+    "replace": "src/environments/environment.ts",
+    "with": "src/environments/environment.prod.ts"
+  }
+]
+```
+
+#### MapService
 
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class MapService {
-  private apiUrl = 'http://localhost:3000/api/maps';
+  private apiUrl = `${environment.apiUrl}/maps`;
 
   constructor(private http: HttpClient) {}
 
@@ -374,7 +425,6 @@ export class MapService {
   }
 
   create(map: Partial<Map>): Observable<Map> {
-    // Auto-generate UID using timestamp
     const uid = `maps-${Date.now()}`;
     return this.http.post<Map>(this.apiUrl, { uid, ...map });
   }
@@ -397,29 +447,41 @@ export interface Map {
   uid: string;
   name: string;
   description?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Actor {
+  id: number;
+  uid: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Activity {
   id: number;
   uid: string;
-  mapId: number;
+  map_id: number;
   name: string;
   priority: 'Need' | 'Want' | 'Nice';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Action {
   id: number;
   uid: string;
-  activityId: number;
+  activity_id: number;
+  actor_id?: number;
+  actor_name?: string;
   name: string;
-  actor: 'PM' | 'Developer' | 'DevOps';
   priority: 'Need' | 'Want' | 'Nice';
   description?: string;
-  dependencies: Action[];
+  created_at: string;
+  updated_at: string;
 }
-```
 
 ## Running the Frontend
 
@@ -428,8 +490,9 @@ export interface Action {
 ```bash
 cd client
 npm install
-npm start
-# Visit http://localhost:4200
+npm run dev
+# App runs on http://localhost:4200
+# API calls proxy to http://localhost:3000
 ```
 
 ### Production
@@ -439,6 +502,7 @@ cd client
 npm install
 npm run build
 # Production build output in dist/storymaps-client/
+# nginx serves /api to backend
 ```
 
 ## Building for Production
@@ -447,3 +511,9 @@ npm run build
 npm run build
 # The production build output is in dist/storymaps-client/
 ```
+
+## Note on API Proxy
+
+In development (`ng serve`), the `proxy.conf.json` handles routing `/api/*` requests to the backend. In production (Docker), nginx handles this routing.
+
+See [Angular Environment Configuration](#angular-environment-configuration) for how the API URL is managed.
