@@ -33,45 +33,44 @@ import { Map, Activity, Action } from '../models';
         </div>
       </div>
 
-      <div *ngIf="map" class="bg-white rounded-lg shadow border border-gray-200 overflow-x-auto">
-        <table class="w-full min-w-[800px]">
-          <thead>
-            <tr class="bg-gray-50 border-b border-gray-200">
-              <th class="w-24 p-3 text-left text-sm font-medium text-gray-500"></th>
-              <th *ngFor="let activity of activities" class="p-3 text-left text-sm font-medium text-gray-900 border-l border-gray-200">
-                {{ activity.name }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let priority of priorities" class="border-b border-gray-200 last:border-0">
-              <td class="p-3">
-                <span [class]="getPriorityClass(priority)" class="px-3 py-1 text-sm font-medium rounded">
-                  {{ priority }}
-                </span>
-              </td>
-              <td *ngFor="let activity of activities" class="p-2 border-l border-gray-200 align-top">
-                <div class="space-y-2 min-h-[60px]">
-                  <div
-                    *ngFor="let action of getActions(activity.id, priority)"
-                    class="p-2 rounded bg-gray-50 border border-gray-200 text-sm"
-                  >
-                    <div class="flex items-center justify-between">
-                      <span class="font-medium">{{ action.name }}</span>
-                      <span [class]="getActorClass(action.actor)" class="ml-2 px-1.5 py-0.5 text-xs rounded">
-                        {{ action.actor }}
-                      </span>
+      <div *ngIf="map" class="matrix-container">
+        <div class="matrix-scroll-content">
+          <table class="matrix-table">
+            <thead class="matrix-thead">
+              <tr>
+                <th class="matrix-corner"></th>
+                <th *ngFor="let activity of activities" class="matrix-header-col">
+                  {{ activity.name }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let priority of priorities" class="matrix-row">
+                <td class="matrix-row-header">
+                  <span [class]="getPriorityClass(priority)" class="px-3 py-1 text-sm font-medium rounded">
+                    {{ priority }}
+                  </span>
+                </td>
+                <td *ngFor="let activity of activities" class="matrix-cell">
+                  <div class="space-y-2 min-h-[60px]">
+                    <div
+                      *ngFor="let action of getActions(activity.id, priority)"
+                      class="action-card"
+                    >
+                      <div class="flex items-center justify-between">
+                        <span class="font-medium">{{ action.name }}</span>
+                      </div>
+                      <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs">{{ action.description }}</p>
                     </div>
-                    <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs">{{ action.description }}</p>
+                    <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-300 text-sm">
+                      -
+                    </div>
                   </div>
-                  <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-300 text-sm">
-                    -
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div *ngIf="!map" class="text-center py-8 text-gray-500">
@@ -146,15 +145,6 @@ export class MapMatrixComponent implements OnInit {
       case 'Need': return 'bg-red-100 text-red-800';
       case 'Want': return 'bg-blue-100 text-blue-800';
       case 'Nice': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  }
-
-  getActorClass(actor: string): string {
-    switch (actor) {
-      case 'PM': return 'bg-purple-100 text-purple-800';
-      case 'Developer': return 'bg-yellow-100 text-yellow-800';
-      case 'DevOps': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   }

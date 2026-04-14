@@ -1,3 +1,116 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom thin scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Matrix container styles */
+.matrix-container {
+  position: relative;
+  overflow: hidden;
+  max-height: 70vh;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.matrix-scroll-content {
+  overflow: auto;
+  max-height: 70vh;
+}
+
+.matrix-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+}
+
+.matrix-thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+}
+
+.matrix-thead tr {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.matrix-header-col {
+  position: sticky;
+  top: 0;
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  border-left: 1px solid #e5e7eb;
+  white-space: nowrap;
+  background: #f9fafb;
+  z-index: 5;
+}
+
+.matrix-corner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 80px;
+  min-width: 80px;
+  padding: 0.75rem;
+  background: #f9fafb;
+  z-index: 15;
+}
+
+.matrix-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.matrix-row:last-child {
+  border-bottom: none;
+}
+
+.matrix-row-header {
+  position: sticky;
+  left: 0;
+  width: 80px;
+  min-width: 80px;
+  padding: 0.75rem;
+  background: white;
+  font-weight: 500;
+  z-index: 5;
+}
+
+.matrix-cell {
+  padding: 0.5rem;
+  border-left: 1px solid #e5e7eb;
+  vertical-align: top;
+  background: white;
+}
+
+.action-card {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 0.875rem;
+}
