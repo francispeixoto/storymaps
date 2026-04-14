@@ -8,7 +8,7 @@ import actionRoutes from './routes/actionRoutes';
 import actorRoutes from './routes/actorRoutes';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(helmet());
 app.use(cors());
