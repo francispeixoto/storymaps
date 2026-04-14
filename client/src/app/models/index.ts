@@ -7,6 +7,15 @@ export interface Map {
   updated_at: string;
 }
 
+export interface Actor {
+  id: number;
+  uid: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Activity {
   id: number;
   uid: string;
@@ -21,8 +30,9 @@ export interface Action {
   id: number;
   uid: string;
   activity_id: number;
+  actor_id?: number;
+  actor_name?: string;
   name: string;
-  actor: 'PM' | 'Developer' | 'DevOps';
   priority: 'Need' | 'Want' | 'Nice';
   description?: string;
   created_at: string;

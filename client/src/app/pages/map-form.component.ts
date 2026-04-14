@@ -5,7 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MapService } from '../services/map.service';
 import { ActivityService } from '../services/activity.service';
 import { ActionService } from '../services/action.service';
-import { Map, Activity, Action } from '../models';
+import { ActorService } from '../services/actor.service';
+import { Map, Activity, Action, Actor } from '../models';
 
 @Component({
   selector: 'app-map-form',
@@ -73,7 +74,7 @@ import { Map, Activity, Action } from '../models';
               <div *ngFor="let action of getActivityActions(activity.id)" class="flex items-center justify-between py-1 text-sm">
                 <div>
                   <span>{{ action.name }}</span>
-                  <span [class]="getActorClass(action.actor)" class="ml-2 px-2 py-0.5 text-xs rounded">{{ action.actor }}</span>
+                  <span class="ml-2 px-2 py-0.5 text-xs rounded bg-gray-100">{{ action.actor_name || '-' }}</span>
                 </div>
                 <span [class]="getPriorityClass(action.priority)" class="px-2 py-0.5 text-xs rounded">{{ action.priority }}</span>
               </div>
@@ -209,10 +210,9 @@ import { Map, Activity, Action } from '../models';
                     class="w-full rounded border-gray-300 px-2 py-1 text-sm"
                   />
                   <div class="flex gap-2">
-                    <select formControlName="actor" class="rounded border-gray-300 px-2 py-1 text-sm">
-                      <option value="PM">PM</option>
-                      <option value="Developer">Developer</option>
-                      <option value="DevOps">DevOps</option>
+                    <select formControlName="actor_id" class="rounded border-gray-300 px-2 py-1 text-sm">
+                      <option [ngValue]="null">Select actor...</option>
+                      <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
                     </select>
                     <select formControlName="priority" class="rounded border-gray-300 px-2 py-1 text-sm">
                       <option value="Need">Need</option>
@@ -239,7 +239,7 @@ import { Map, Activity, Action } from '../models';
               <div *ngFor="let action of getActivityActions(activity.id)" class="flex items-center justify-between py-1 text-sm border-b border-gray-100 last:border-0">
                 <div class="flex items-center gap-2">
                   <span>{{ action.name }}</span>
-                  <span [class]="getActorClass(action.actor)" class="px-1.5 py-0.5 text-xs rounded">{{ action.actor }}</span>
+                  <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100">{{ action.actor_name || '-' }}</span>
                   <span [class]="getPriorityClass(action.priority)" class="px-1.5 py-0.5 text-xs rounded">{{ action.priority }}</span>
                 </div>
                 <button
@@ -293,12 +293,14 @@ export class MapFormComponent implements OnInit {
   expandedActivityId: number | null = null;
   showActivityForm = false;
   addActionToActivityId: number | null = null;
+  actors: Actor[] = [];
 
   constructor(
     private fb: FormBuilder,
     private mapService: MapService,
     private activityService: ActivityService,
     private actionService: ActionService,
+    private actorService: ActorService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -316,10 +318,12 @@ export class MapFormComponent implements OnInit {
 
     this.actionForm = this.fb.group({
       name: ['', Validators.required],
-      actor: ['PM', Validators.required],
+      actor_id: [null],
       priority: ['Need', Validators.required],
       description: ['']
     });
+
+    this.loadActors();
 
     this.route.data.subscribe(data => {
       this.mode = data['mode'] || 'create';
@@ -361,6 +365,13 @@ export class MapFormComponent implements OnInit {
         this.loadActionsForActivities(activities);
       },
       error: (err) => console.error('Error loading activities:', err)
+    });
+  }
+
+  loadActors(): void {
+    this.actorService.getAll().subscribe({
+      next: (actors) => this.actors = actors,
+      error: (err) => console.error('Error loading actors:', err)
     });
   }
 
@@ -419,7 +430,7 @@ export class MapFormComponent implements OnInit {
   showAddActionForm(activityId: number): void {
     this.addActionToActivityId = this.addActionToActivityId === activityId ? null : activityId;
     if (this.addActionToActivityId === activityId) {
-      this.actionForm.reset({ actor: 'PM', priority: 'Need' });
+      this.actionForm.reset({ actor_id: null, priority: 'Need' });
     }
   }
 
@@ -427,18 +438,18 @@ export class MapFormComponent implements OnInit {
     if (this.actionForm.invalid) return;
     
     this.submittingAction = true;
-    const { name, actor, priority, description } = this.actionForm.value;
+    const { name, actor_id, priority, description } = this.actionForm.value;
     
     this.actionService.create({
       name,
-      actor,
+      actor_id: actor_id || null,
       priority,
       description,
       activity_id: activityId
     }).subscribe({
       next: () => {
         this.loadActionsForActivities(this.activities);
-        this.actionForm.reset({ actor: 'PM', priority: 'Need' });
+        this.actionForm.reset({ actor_id: null, priority: 'Need' });
         this.addActionToActivityId = null;
         this.submittingAction = false;
       },

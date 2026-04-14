@@ -9,12 +9,21 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const db = new Database(dbPath);
+export const db: any = new Database(dbPath);
 
 db.pragma('foreign_keys = ON');
 
 export function initDatabase(): void {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS actors (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uid TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS maps (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       uid TEXT UNIQUE NOT NULL,
@@ -39,13 +48,14 @@ export function initDatabase(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       uid TEXT UNIQUE NOT NULL,
       activity_id INTEGER NOT NULL,
+      actor_id INTEGER,
       name TEXT NOT NULL,
-      actor TEXT CHECK(actor IN ('PM', 'Developer', 'DevOps')),
       priority TEXT CHECK(priority IN ('Need', 'Want', 'Nice')),
       description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+      FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
+      FOREIGN KEY (actor_id) REFERENCES actors(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS action_dependencies (
