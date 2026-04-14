@@ -17,6 +17,12 @@ import { Actor } from '../models';
         </h2>
         <div class="flex gap-2" *ngIf="mode === 'view'">
           <button
+            (click)="goToMatrix()"
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+          >
+            Matrix
+          </button>
+          <button
             (click)="goToEdit()"
             class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
           >
@@ -179,6 +185,12 @@ export class ActorFormComponent implements OnInit {
   goToEdit(): void {
     if (this.actorId) {
       this.router.navigate(['/actors', this.actorId, 'edit']);
+    }
+  }
+
+  goToMatrix(): void {
+    if (this.actorId) {
+      this.router.navigate(['/actors', this.actorId, 'matrix']);
     }
   }
 

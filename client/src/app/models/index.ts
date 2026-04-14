@@ -46,3 +46,19 @@ export interface ActionDependency {
   depends_on_uid?: string;
   depends_on_name?: string;
 }
+
+export interface ActorAction {
+  id: number;
+  uid: string;
+  activity_id: number;
+  actor_id?: number;
+  name: string;
+  priority: 'Need' | 'Want' | 'Nice';
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  activity_uid: string;
+  activity_name: string;
+  map_uid: string;
+  map_name: string;
+}

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Actor } from '../models';
+import { Actor, ActorAction } from '../models';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -18,6 +18,10 @@ export class ActorService {
 
   getById(id: number): Observable<Actor> {
     return this.http.get<Actor>(`${this.apiUrl}/${id}`);
+  }
+
+  getActions(id: number): Observable<ActorAction[]> {
+    return this.http.get<ActorAction[]>(`${this.apiUrl}/${id}/actions`);
   }
 
   create(actor: Partial<Actor>): Observable<Actor> {
