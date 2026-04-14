@@ -1,0 +1,16 @@
+meta {
+  name: Update Actor
+  type: http
+  version: 1.0.0
+}
+
+put http://localhost:3000/api/actors/:id {
+  body: json({
+    name: "Updated Actor",
+    description: "Updated description"
+  })
+
+  response {
+    status: 200
+  }
+}

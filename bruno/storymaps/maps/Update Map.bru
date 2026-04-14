@@ -1,0 +1,16 @@
+meta {
+  name: Update Map
+  type: http
+  version: 1.0.0
+}
+
+put http://localhost:3000/api/maps/:id {
+  body: json({
+    name: "Updated Map Name",
+    description: "Updated description"
+  })
+
+  response {
+    status: 200
+  }
+}

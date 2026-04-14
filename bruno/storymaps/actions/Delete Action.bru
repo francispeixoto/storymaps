@@ -1,0 +1,11 @@
+meta {
+  name: Delete Action
+  type: http
+  version: 1.0.0
+}
+
+delete http://localhost:3000/api/actions/:id {
+  response {
+    status: 204
+  }
+}

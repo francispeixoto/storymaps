@@ -1,0 +1,11 @@
+meta {
+  name: Delete Actor
+  type: http
+  version: 1.0.0
+}
+
+delete http://localhost:3000/api/actors/:id {
+  response {
+    status: 204
+  }
+}
