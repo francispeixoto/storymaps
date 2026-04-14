@@ -7,7 +7,7 @@ import { Map } from '../models';
   providedIn: 'root'
 })
 export class MapService {
-  private apiUrl = 'http://localhost:3000/api/maps';
+  private apiUrl = '/api/maps';
 
   constructor(private http: HttpClient) {}
 
