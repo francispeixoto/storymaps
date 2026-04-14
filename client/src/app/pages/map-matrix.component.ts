@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MapService } from '../services/map.service';
 import { ActivityService } from '../services/activity.service';
 import { ActionService } from '../services/action.service';
-import { Map, Activity, Action } from '../models';
+import { ActorService } from '../services/actor.service';
+import { Map, Activity, Action, Actor } from '../models';
 
 @Component({
   selector: 'app-map-matrix',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="max-w-full mx-auto">
       <div class="flex justify-between items-center mb-6">
@@ -19,8 +21,14 @@ import { Map, Activity, Action } from '../models';
         </div>
         <div class="flex gap-2">
           <button
-            (click)="goToEdit()"
+            (click)="showAddActivityModal = true"
             class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Add Activity
+          </button>
+          <button
+            (click)="goToEdit()"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Edit
           </button>
@@ -40,7 +48,16 @@ import { Map, Activity, Action } from '../models';
               <tr>
                 <th class="matrix-corner"></th>
                 <th *ngFor="let activity of activities" class="matrix-header-col">
-                  {{ activity.name }}
+                  <div class="flex items-center justify-between">
+                    <span>{{ activity.name }}</span>
+                    <button
+                      type="button"
+                      (click)="openAddActionModal(activity.id)"
+                      class="text-xs text-indigo-600 hover:text-indigo-800 ml-2"
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -80,6 +97,89 @@ import { Map, Activity, Action } from '../models';
         Loading...
       </div>
     </div>
+
+    <!-- Add Activity Modal -->
+    <div *ngIf="showAddActivityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4">Add Activity</h3>
+        <form [formGroup]="activityForm" (ngSubmit)="addActivityFromModal()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Priority *</label>
+            <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
+              <option value="Need">Need</option>
+              <option value="Want">Want</option>
+              <option value="Nice">Nice</option>
+            </select>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showAddActivityModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+            <button type="submit" [disabled]="activityForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Action Modal -->
+    <div *ngIf="showAddActionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4">Add Action</h3>
+        <form [formGroup]="actionForm" (ngSubmit)="addActionFromModal()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Action Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+          </div>
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700">Actor</label>
+              <div class="flex items-center gap-1">
+                <select formControlName="actor_id" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                  <option [ngValue]="null">Select actor...</option>
+                  <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
+                </select>
+                <button type="button" (click)="showNewActorModal = true" class="text-indigo-600 hover:text-indigo-800 text-xs">+ New</button>
+              </div>
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700">Priority *</label>
+              <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                <option value="Need">Need</option>
+                <option value="Want">Want</option>
+                <option value="Nice">Nice</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showAddActionModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+            <button type="submit" [disabled]="actionForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- New Actor Modal -->
+    <div *ngIf="showNewActorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4">Add Actor</h3>
+        <form [formGroup]="newActorForm" (ngSubmit)="addActorFromModal()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Actor Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showNewActorModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+            <button type="submit" [disabled]="newActorForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `
 })
 export class MapMatrixComponent implements OnInit {
@@ -89,19 +189,49 @@ export class MapMatrixComponent implements OnInit {
   priorities = ['Need', 'Want', 'Nice'];
   mapId: number | null = null;
 
+  showAddActivityModal = false;
+  showAddActionModal = false;
+  showNewActorModal = false;
+  addActionToActivityId: number | null = null;
+
+  activityForm!: FormGroup;
+  actionForm!: FormGroup;
+  newActorForm!: FormGroup;
+
+  actors: Actor[] = [];
+  submittingActivity = false;
+  submittingAction = false;
+
   constructor(
     private mapService: MapService,
     private activityService: ActivityService,
     private actionService: ActionService,
+    private actorService: ActorService,
+    private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.activityForm = this.fb.group({
+      name: ['', Validators.required],
+      priority: ['Need', Validators.required]
+    });
+    this.actionForm = this.fb.group({
+      name: ['', Validators.required],
+      actor_id: [null],
+      priority: ['Need', Validators.required],
+      description: ['']
+    });
+    this.newActorForm = this.fb.group({
+      name: ['', Validators.required]
+    });
+
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.mapId = +params['id'];
         this.loadMap();
+        this.loadActors();
       }
     });
   }
@@ -121,13 +251,19 @@ export class MapMatrixComponent implements OnInit {
     });
   }
 
+  loadActors(): void {
+    this.actorService.getAll().subscribe({
+      next: (actors) => this.actors = actors,
+      error: (err) => console.error('Error loading actors:', err)
+    });
+  }
+
   loadActions(activities: Activity[]): void {
-    let loaded = 0;
+    this.actions = [];
     activities.forEach(activity => {
       this.actionService.getAll(activity.id).subscribe({
         next: (actions) => {
           this.actions = [...this.actions, ...actions];
-          loaded++;
         },
         error: (err) => console.error('Error loading actions:', err)
       });
@@ -149,6 +285,78 @@ export class MapMatrixComponent implements OnInit {
     }
   }
 
+  addActivityFromModal(): void {
+    if (!this.mapId || this.activityForm.invalid) return;
+    
+    this.submittingActivity = true;
+    const { name, priority } = this.activityForm.value;
+    
+    this.activityService.create({
+      name,
+      priority,
+      map_id: this.mapId
+    }).subscribe({
+      next: () => {
+        this.loadMap();
+        this.activityForm.reset({ priority: 'Need' });
+        this.showAddActivityModal = false;
+        this.submittingActivity = false;
+      },
+      error: (err) => {
+        console.error('Error adding activity:', err);
+        this.submittingActivity = false;
+      }
+    });
+  }
+
+  openAddActionModal(activityId: number): void {
+    this.addActionToActivityId = activityId;
+    this.actionForm.reset({ actor_id: null, priority: 'Need' });
+    this.showAddActionModal = true;
+  }
+
+  addActionFromModal(): void {
+    if (!this.addActionToActivityId || this.actionForm.invalid) return;
+    
+    this.submittingAction = true;
+    const { name, actor_id, priority, description } = this.actionForm.value;
+    
+    this.actionService.create({
+      name,
+      actor_id,
+      priority,
+      description,
+      activity_id: this.addActionToActivityId
+    }).subscribe({
+      next: () => {
+        this.loadMap();
+        this.actionForm.reset({ actor_id: null, priority: 'Need' });
+        this.showAddActionModal = false;
+        this.addActionToActivityId = null;
+        this.submittingAction = false;
+      },
+      error: (err) => {
+        console.error('Error adding action:', err);
+        this.submittingAction = false;
+      }
+    });
+  }
+
+  addActorFromModal(): void {
+    if (this.newActorForm.invalid) return;
+    
+    const { name } = this.newActorForm.value;
+    
+    this.actorService.create({ name }).subscribe({
+      next: () => {
+        this.loadActors();
+        this.newActorForm.reset({ name: '' });
+        this.showNewActorModal = false;
+      },
+      error: (err) => console.error('Error adding actor:', err)
+    });
+  }
+
   goToEdit(): void {
     if (this.mapId) {
       this.router.navigate(['/maps', this.mapId, 'edit']);
@@ -157,7 +365,7 @@ export class MapMatrixComponent implements OnInit {
 
   goBack(): void {
     if (this.mapId) {
-      this.router.navigate(['/maps', this.mapId]);
+      this.router.navigate(['/maps', this.mapId, 'activities']);
     }
   }
 }

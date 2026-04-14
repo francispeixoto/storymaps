@@ -14,7 +14,7 @@ export const routes: Routes = [
   { path: 'actors/:id/edit', component: ActorFormComponent, data: { mode: 'edit' } },
   { path: 'actors/:id/matrix', component: ActorMatrixComponent },
   { path: 'maps/create', component: MapFormComponent, data: { mode: 'create' } },
-  { path: 'maps/:id', component: MapFormComponent, data: { mode: 'view' } },
+  { path: 'maps/:id', component: MapMatrixComponent },
   { path: 'maps/:id/edit', component: MapFormComponent, data: { mode: 'edit' } },
-  { path: 'maps/:id/matrix', component: MapMatrixComponent }
+  { path: 'maps/:id/activities', component: MapFormComponent, data: { mode: 'view' } }
 ];

@@ -20,14 +20,14 @@ import { Map, Activity, Action, Actor } from '../models';
         </h2>
         <div class="flex gap-2" *ngIf="mode === 'view'">
           <button
-            (click)="goToMatrix()"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+            (click)="showAddActivityModal = true"
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
           >
-            Matrix
+            Add Activity
           </button>
           <button
             (click)="goToEdit()"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Edit
           </button>
@@ -49,37 +49,112 @@ import { Map, Activity, Action, Actor } from '../models';
           <p class="text-sm text-gray-500">Created: {{ map.created_at | date:'medium' }}</p>
         </div>
 
-        <!-- Activities Section -->
+        <!-- Activities Section (View Mode) -->
         <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-          <h4 class="text-lg font-medium text-gray-900 mb-4">Activities</h4>
-          <div *ngIf="activities.length === 0" class="text-gray-500">No activities yet.</div>
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-lg font-medium text-gray-900">Activities</h4>
+          </div>
+          <div *ngIf="activities.length === 0" class="text-gray-500">No activities yet. Click "Add Activity" to create one.</div>
           <div *ngFor="let activity of activities" class="border-b border-gray-200 last:border-0 py-3">
             <div class="flex items-center justify-between">
-              <div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="toggleActivityActions(activity.id)"
+                  class="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  {{ expandedActivityId === activity.id ? '▼' : '▶' }}
+                </button>
                 <span class="font-medium">{{ activity.name }}</span>
-                <span [class]="getPriorityClass(activity.priority)" class="ml-2 px-2 py-0.5 text-xs rounded">
+                <span [class]="getPriorityClass(activity.priority)" class="px-2 py-0.5 text-xs rounded">
                   {{ activity.priority }}
                 </span>
               </div>
               <button
                 type="button"
-                (click)="toggleActivityActions(activity.id)"
-                class="text-sm text-gray-500 hover:text-gray-700"
+                (click)="openAddActionModal(activity.id)"
+                class="text-sm text-indigo-600 hover:text-indigo-800"
               >
-                {{ expandedActivityId === activity.id ? '▼' : '▶' }} {{ getActivityActions(activity.id).length }} actions
+                + Add Action
               </button>
             </div>
             <!-- Actions List (collapsed by default) -->
-            <div *ngIf="expandedActivityId === activity.id" class="mt-2 ml-4 pl-4 border-l-2 border-gray-200">
+            <div *ngIf="expandedActivityId === activity.id" class="mt-2 ml-6 pl-4 border-l-2 border-gray-200">
               <div *ngFor="let action of getActivityActions(activity.id)" class="flex items-center justify-between py-1 text-sm">
-                <div>
+                <div class="flex items-center gap-2">
                   <span>{{ action.name }}</span>
-                  <span class="ml-2 px-2 py-0.5 text-xs rounded bg-gray-100">{{ action.actor_name || '-' }}</span>
+                  <span class="px-2 py-0.5 text-xs rounded bg-gray-100">{{ action.actor_name || '-' }}</span>
                 </div>
                 <span [class]="getPriorityClass(action.priority)" class="px-2 py-0.5 text-xs rounded">{{ action.priority }}</span>
               </div>
               <div *ngIf="getActivityActions(activity.id).length === 0" class="text-gray-400 text-sm py-1">No actions</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Add Activity Modal (View Mode) -->
+        <div *ngIf="showAddActivityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-medium mb-4">Add Activity</h3>
+            <form [formGroup]="activityForm" (ngSubmit)="addActivityFromModal()" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
+                <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Priority *</label>
+                <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
+                  <option value="Need">Need</option>
+                  <option value="Want">Want</option>
+                  <option value="Nice">Nice</option>
+                </select>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" (click)="showAddActivityModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+                <button type="submit" [disabled]="activityForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Add Action Modal (View Mode) -->
+        <div *ngIf="showAddActionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-medium mb-4">Add Action</h3>
+            <form [formGroup]="actionForm" (ngSubmit)="addActionFromModal()" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Action Name *</label>
+                <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+              </div>
+              <div class="flex gap-2">
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700">Actor</label>
+                  <div class="flex items-center gap-1">
+                    <select formControlName="actor_id" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                      <option [ngValue]="null">Select actor...</option>
+                      <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
+                    </select>
+                    <button type="button" (click)="showNewActorModal = true" class="text-indigo-600 hover:text-indigo-800 text-xs">+ New</button>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700">Priority *</label>
+                  <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                    <option value="Need">Need</option>
+                    <option value="Want">Want</option>
+                    <option value="Nice">Nice</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" (click)="showAddActionModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+                <button type="submit" [disabled]="actionForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -318,7 +393,9 @@ export class MapFormComponent implements OnInit {
   actionsByActivity: { [activityId: number]: Action[] } = {};
   expandedActivityId: number | null = null;
   showActivityForm = false;
+  showAddActivityModal = false;
   addActionToActivityId: number | null = null;
+  showAddActionModal = false;
   actors: Actor[] = [];
   showNewActorModal = false;
   newActorForm!: FormGroup;
@@ -447,6 +524,63 @@ export class MapFormComponent implements OnInit {
 
   toggleActivityActions(activityId: number): void {
     this.expandedActivityId = this.expandedActivityId === activityId ? null : activityId;
+  }
+
+  addActivityFromModal(): void {
+    if (!this.mapId || this.activityForm.invalid) return;
+    
+    this.submittingActivity = true;
+    const { name, priority } = this.activityForm.value;
+    
+    this.activityService.create({
+      name,
+      priority,
+      map_id: this.mapId
+    }).subscribe({
+      next: () => {
+        this.loadActivities();
+        this.activityForm.reset({ priority: 'Need' });
+        this.showAddActivityModal = false;
+        this.submittingActivity = false;
+      },
+      error: (err) => {
+        console.error('Error adding activity:', err);
+        this.submittingActivity = false;
+      }
+    });
+  }
+
+  openAddActionModal(activityId: number): void {
+    this.addActionToActivityId = activityId;
+    this.actionForm.reset({ actor_id: null, priority: 'Need' });
+    this.showAddActionModal = true;
+  }
+
+  addActionFromModal(): void {
+    if (!this.addActionToActivityId || this.actionForm.invalid) return;
+    
+    this.submittingAction = true;
+    const { name, actor_id, priority, description } = this.actionForm.value;
+    
+    this.actionService.create({
+      name,
+      actor_id,
+      priority,
+      description,
+      activity_id: this.addActionToActivityId
+    }).subscribe({
+      next: () => {
+        this.loadActivities();
+        this.actionForm.reset({ actor_id: null, priority: 'Need' });
+        this.showAddActionModal = false;
+        this.addActionToActivityId = null;
+        this.submittingAction = false;
+      },
+      error: (err) => {
+        console.error('Error adding action:', err);
+        this.submittingAction = false;
+      }
+    });
   }
 
   addActivity(): void {
