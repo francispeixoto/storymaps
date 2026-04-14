@@ -40,18 +40,22 @@ client/
 ├── src/
 │   ├── app/
 │   │   ├── components/          # Reusable components
-│   │   ├── services/            # API services (map.service.ts, activity.service.ts, action.service.ts)
+│   │   ├── services/            # API services
+│   │   │   ├── map.service.ts
+│   │   │   ├── activity.service.ts
+│   │   │   ├── action.service.ts
+│   │   │   └── actor.service.ts
 │   │   ├── models/             # TypeScript interfaces (index.ts)
 │   │   ├── pages/             # Route pages
 │   │   │   ├── home-page.component.ts    # Home page with map list
 │   │   │   ├── map-form.component.ts      # Create/Edit/View map form
-│   │   │   └── map-create.component.ts     # Create new map form (legacy)
+│   │   │   ├── map-matrix.component.ts   # Kanban-style matrix view
+│   │   │   ├── actors-page.component.ts # Actor list
+│   │   │   └── actor-form.component.ts  # Create/Edit/View actor
 │   │   ├── app.component.ts  # Root component
 │   │   ├── app.config.ts    # App configuration
 │   │   └── app.routes.ts  # Route definitions
-│   ├── assets/
-│   ├── environments/
-│   ├── styles.css             # Tailwind directives
+│   ├── styles.css             # Tailwind + custom scrollbars
 │   ├── index.html
 │   └── main.ts
 ├── angular.json
@@ -59,6 +63,7 @@ client/
 ├── postcss.config.js
 ├── package.json
 ├── tsconfig.json
+├── proxy.conf.json            # API proxy config for dev
 └── .gitignore
 ```
 
@@ -193,9 +198,14 @@ export class MapViewerComponent {}
 | Path | Component | Description |
 |------|-----------|-------------|
 | `/` | HomePageComponent | Map list with create button |
+| `/actors` | ActorsPageComponent | Actor management list |
+| `/actors/create` | ActorFormComponent | Create new actor |
+| `/actors/:id` | ActorFormComponent | View actor |
+| `/actors/:id/edit` | ActorFormComponent | Edit actor |
 | `/maps/create` | MapFormComponent | Create new map form |
 | `/maps/:id` | MapFormComponent | View map with activities |
 | `/maps/:id/edit` | MapFormComponent | Edit map and manage activities |
+| `/maps/:id/matrix` | MapMatrixComponent | Kanban-style matrix view |
 
 ## Activity Management
 
@@ -247,6 +257,101 @@ create(action: Partial<Action>): Observable<Action> {
   const uid = `maps-${activityId}-act-${Date.now()}`;
   return this.http.post<Action>(this.apiUrl, { uid, ...action });
 }
+```
+
+## Actor Management
+
+### ActorService
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class ActorService {
+  private apiUrl = '/api/actors';
+
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<Actor[]> {
+    return this.http.get<Actor[]>(this.apiUrl);
+  }
+
+  getById(id: number): Observable<Actor> {
+    return this.http.get<Actor>(`${this.apiUrl}/${id}`);
+  }
+
+  create(actor: Partial<Actor>): Observable<Actor> {
+    const uid = `actor-${Date.now()}`;
+    return this.http.post<Actor>(this.apiUrl, { uid, ...actor });
+  }
+
+  update(id: number, actor: Partial<Actor>): Observable<Actor> {
+    return this.http.put<Actor>(`${this.apiUrl}/${id}`, actor);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+}
+```
+
+### Inline Actor Creation Modal
+
+In the map edit form, actions can create actors inline. A "+ New" button next to the actor dropdown opens a modal:
+
+```typescript
+// Modal shown when adding new actor
+<div *ngIf="showNewActorModal" class="modal">
+  <form [formGroup]="newActorForm" (ngSubmit)="createActorAndSelect()">
+    <input formControlName="name" placeholder="Actor Name" />
+    <textarea formControlName="description" placeholder="Description"></textarea>
+    <button type="submit">Create</button>
+  </form>
+</div>
+```
+
+After creation, the new actor is automatically selected in the dropdown.
+
+## Matrix View (Kanban-Style)
+
+The matrix view (`/maps/:id/matrix`) displays:
+- **Columns**: Activities
+- **Rows**: Priority swimlanes (Need, Want, Nice)
+- **Cells**: Action cards at activity × priority intersection
+
+Features:
+- Sticky column headers (activity names)
+- Sticky row headers (priority labels)
+- Horizontal and vertical scrolling
+- Custom thin scrollbars (8px)
+
+```typescript
+@Component({
+  selector: 'app-map-matrix',
+  template: `
+    <div class="matrix-container">
+      <table class="matrix-table">
+        <thead class="matrix-thead">
+          <tr>
+            <th class="matrix-corner"></th>
+            <th *ngFor="let activity of activities">
+              {{ activity.name }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let priority of priorities">
+            <td class="matrix-row-header">{{ priority }}</td>
+            <td *ngFor="let activity of activities">
+              <div *ngFor="let action of getActions(activity.id, priority)">
+                {{ action.name }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `
+})
+export class MapMatrixComponent {}
 ```
 
 ## Running the Frontend

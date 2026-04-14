@@ -4,6 +4,24 @@ This document details the SQLite database schema for StoryMaps.
 
 ## Schema
 
+### Actors Table
+
+```sql
+CREATE TABLE actors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+- **uid**: Unique identifier (e.g., 'actor-001')
+- **name**: Actor name (managed via UI, no enum constraint)
+- **description**: Optional actor description
+- **Timestamps**: Auto-managed creation and update times
+
 ### Maps Table
 
 ```sql
@@ -49,19 +67,20 @@ CREATE TABLE actions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uid TEXT UNIQUE NOT NULL,
     activity_id INTEGER NOT NULL,
+    actor_id INTEGER,
     name TEXT NOT NULL,
-    actor TEXT CHECK(actor IN ('PM', 'Developer', 'DevOps')),
     priority TEXT CHECK(priority IN ('Need', 'Want', 'Nice')),
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES actors(id) ON DELETE SET NULL
 );
 ```
 
 - **uid**: Unique identifier from story map (e.g., 'maps-001_act_001_act_001')
 - **activity_id**: Foreign key to parent activity
-- **actor**: Must be 'PM', 'Developer', or 'DevOps'
+- **actor_id**: Foreign key to actor (nullable, allows actions without assigned actor)
 - **priority**: Must be 'Need', 'Want', or 'Nice'
 - **description**: Optional action description
 
@@ -96,9 +115,29 @@ CREATE INDEX idx_action_dependencies_action_id ON action_dependencies(action_id)
 ## Relationships
 
 ```
+actors (1) ─────< actions (N)
 maps (1) ─────< activities (N)
 activities (1) ─────< actions (N)
 actions (N) ─────< action_dependencies (M) ─────< actions (N)
+```
+
+## Migrations
+
+For existing databases, the following migrations add the actors table and actor_id column:
+
+```sql
+-- Create actors table if missing
+CREATE TABLE IF NOT EXISTS actors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add actor_id column to actions if missing
+ALTER TABLE actions ADD COLUMN actor_id INTEGER REFERENCES actors(id) ON DELETE SET NULL;
 ```
 
 ## Initialization Script
@@ -110,6 +149,15 @@ The database can be initialized with the following script:
 PRAGMA foreign_keys = ON;
 
 -- Create tables
+CREATE TABLE IF NOT EXISTS actors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS maps (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uid TEXT UNIQUE NOT NULL,
@@ -134,13 +182,14 @@ CREATE TABLE IF NOT EXISTS actions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uid TEXT UNIQUE NOT NULL,
     activity_id INTEGER NOT NULL,
+    actor_id INTEGER,
     name TEXT NOT NULL,
-    actor TEXT CHECK(actor IN ('PM', 'Developer', 'DevOps')),
     priority TEXT CHECK(priority IN ('Need', 'Want', 'Nice')),
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES actors(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS action_dependencies (
@@ -163,22 +212,23 @@ CREATE INDEX IF NOT EXISTS idx_action_dependencies_action_id ON action_dependenc
 
 ## Sample Queries
 
-### Get map with all activities and actions
+### Get map with all activities, actions, and actors
 
 ```sql
 SELECT 
     m.id as map_id, m.uid as map_uid, m.name as map_name,
     a.id as activity_id, a.uid as activity_uid, a.name as activity_name, a.priority,
     act.id as action_id, act.uid as action_uid, act.name as action_name, 
-    act.actor, act.priority as action_priority, act.description
+    actr.name as actor_name, act.priority as action_priority, act.description
 FROM maps m
 JOIN activities a ON a.map_id = m.id
 JOIN actions act ON act.activity_id = a.id
+LEFT JOIN actors actr ON act.actor_id = actr.id
 WHERE m.id = ?
 ORDER BY a.id, act.id;
 ```
 
-### Get action dependencies
+### Get action dependencies with actor names
 
 ```sql
 SELECT 
@@ -188,4 +238,19 @@ FROM action_dependencies ad
 JOIN actions a ON a.id = ad.action_id
 JOIN actions dep ON dep.id = ad.depends_on_action_id
 WHERE ad.action_id = ?;
+```
+
+### Get actions grouped by priority for matrix view
+
+```sql
+SELECT 
+    a.name as activity_name,
+    act.name as action_name,
+    actr.name as actor_name,
+    act.priority
+FROM activities a
+JOIN actions act ON act.activity_id = a.id
+LEFT JOIN actors actr ON act.actor_id = actr.id
+WHERE a.map_id = ?
+ORDER BY act.priority, a.name;
 ```

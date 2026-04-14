@@ -22,11 +22,13 @@ server/
 │   ├── routes/
 │   │   ├── mapRoutes.ts
 │   │   ├── activityRoutes.ts
-│   │   └── actionRoutes.ts
+│   │   ├── actionRoutes.ts
+│   │   └── actorRoutes.ts
 │   ├── controllers/
 │   │   ├── mapController.ts
 │   │   ├── activityController.ts
-│   │   └── actionController.ts
+│   │   ├── actionController.ts
+│   │   └── actorController.ts
 │   ├── models/
 │   │   └── db.ts
 │   ├── services/
@@ -54,6 +56,7 @@ import { initDatabase } from './models/db';
 import mapRoutes from './routes/mapRoutes';
 import activityRoutes from './routes/activityRoutes';
 import actionRoutes from './routes/actionRoutes';
+import actorRoutes from './routes/actorRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -67,6 +70,7 @@ initDatabase();
 app.use('/api/maps', mapRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/actions', actionRoutes);
+app.use('/api/actors', actorRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -101,6 +105,15 @@ db.pragma('foreign_keys = ON');
 
 export function initDatabase(): void {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS actors (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uid TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS maps (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       uid TEXT UNIQUE NOT NULL,
@@ -125,13 +138,14 @@ export function initDatabase(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       uid TEXT UNIQUE NOT NULL,
       activity_id INTEGER NOT NULL,
+      actor_id INTEGER,
       name TEXT NOT NULL,
-      actor TEXT CHECK(actor IN ('PM', 'Developer', 'DevOps')),
       priority TEXT CHECK(priority IN ('Need', 'Want', 'Nice')),
       description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+      FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
+      FOREIGN KEY (actor_id) REFERENCES actors(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS action_dependencies (
@@ -150,6 +164,29 @@ export function initDatabase(): void {
     CREATE INDEX IF NOT EXISTS idx_actions_uid ON actions(uid);
     CREATE INDEX IF NOT EXISTS idx_action_dependencies_action_id ON action_dependencies(action_id);
   `);
+
+  // Migration: add actors table and actor_id column if missing
+  try {
+    const hasActorsTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='actors'").get();
+    if (!hasActorsTable) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS actors (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          uid TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+    const hasActorId = db.prepare("PRAGMA table_info(actions)").all().some((col: any) => col.name === 'actor_id');
+    if (!hasActorId) {
+      db.exec('ALTER TABLE actions ADD COLUMN actor_id INTEGER REFERENCES actors(id) ON DELETE SET NULL');
+    }
+  } catch (e) {
+    // Ignore migration errors
+  }
 
   console.log('Database initialized');
 }
@@ -230,6 +267,83 @@ router.get('/:id', mapController.getMapById);
 router.post('/', mapController.createMap);
 router.put('/:id', mapController.updateMap);
 router.delete('/:id', mapController.deleteMap);
+
+export default router;
+```
+
+### Actor Controller (src/controllers/actorController.ts)
+
+```typescript
+import { Request, Response } from 'express';
+import db from '../models/db';
+
+export const getAllActors = (_req: Request, res: Response): void => {
+  const actors = db.prepare('SELECT * FROM actors ORDER BY name').all();
+  res.json(actors);
+};
+
+export const getActorById = (req: Request, res: Response): void => {
+  const actor = db.prepare('SELECT * FROM actors WHERE id = ?').get(req.params.id);
+  if (!actor) {
+    res.status(404).json({ error: 'Actor not found' });
+    return;
+  }
+  res.json(actor);
+};
+
+export const createActor = (req: Request, res: Response): void => {
+  const { uid, name, description } = req.body;
+  if (!uid || !name) {
+    res.status(400).json({ error: 'uid and name are required' });
+    return;
+  }
+  const stmt = db.prepare(
+    'INSERT INTO actors (uid, name, description) VALUES (?, ?, ?)'
+  );
+  const result = stmt.run(uid, name, description || null);
+  const actor = db.prepare('SELECT * FROM actors WHERE id = ?').get(result.lastInsertRowid);
+  res.status(201).json(actor);
+};
+
+export const updateActor = (req: Request, res: Response): void => {
+  const { name, description } = req.body;
+  const existing = db.prepare('SELECT * FROM actors WHERE id = ?').get(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: 'Actor not found' });
+    return;
+  }
+  const stmt = db.prepare(
+    'UPDATE actors SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+  );
+  stmt.run(name, description, req.params.id);
+  const actor = db.prepare('SELECT * FROM actors WHERE id = ?').get(req.params.id);
+  res.json(actor);
+};
+
+export const deleteActor = (req: Request, res: Response): void => {
+  const existing = db.prepare('SELECT * FROM actors WHERE id = ?').get(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: 'Actor not found' });
+    return;
+  }
+  db.prepare('DELETE FROM actors WHERE id = ?').run(req.params.id);
+  res.status(204).send();
+};
+```
+
+### Actor Routes (routes/actorRoutes.ts)
+
+```typescript
+import { Router } from 'express';
+import * as actorController from '../controllers/actorController';
+
+const router = Router();
+
+router.get('/', actorController.getAllActors);
+router.get('/:id', actorController.getActorById);
+router.post('/', actorController.createActor);
+router.put('/:id', actorController.updateActor);
+router.delete('/:id', actorController.deleteActor);
 
 export default router;
 ```

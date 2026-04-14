@@ -9,6 +9,12 @@ This section documents the REST API endpoints for StoryMaps.
 
 ## Endpoints
 
+### Health
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+
 ### Maps
 
 | Method | Endpoint | Description |
@@ -28,6 +34,16 @@ This section documents the REST API endpoints for StoryMaps.
 | POST | `/activities` | Create new activity |
 | PUT | `/activities/:id` | Update activity |
 | DELETE | `/activities/:id` | Delete activity |
+
+### Actors
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/actors` | Get all actors |
+| GET | `/actors/:id` | Get actor by ID |
+| POST | `/actors` | Create new actor |
+| PUT | `/actors/:id` | Update actor |
+| DELETE | `/actors/:id` | Delete actor |
 
 ### Actions
 
@@ -232,7 +248,7 @@ Delete an activity. Cascades to delete associated actions.
 
 ### GET /actions
 
-Get all actions, optionally filtered by activity_id.
+Get all actions, optionally filtered by activity_id. Includes `actor_name` from join with actors table.
 
 **Query Parameters**:
 - `activity_id` (optional): Filter by activity
@@ -246,8 +262,9 @@ Get all actions, optionally filtered by activity_id.
     "id": 1,
     "uid": "maps-001_act_001_act_001",
     "activity_id": 1,
+    "actor_id": 1,
     "name": "Define map name",
-    "actor": "PM",
+    "actor_name": "PM",
     "priority": "Need",
     "description": "The user defines a unique name",
     "created_at": "2026-04-13T10:00:00.000Z",
@@ -265,8 +282,8 @@ Create a new action.
 {
   "uid": "maps-001_act_001_act_001",
   "activity_id": 1,
+  "actor_id": 1,
   "name": "Define map name",
-  "actor": "PM",
   "priority": "Need",
   "description": "The user defines a unique name"
 }
@@ -278,8 +295,9 @@ Create a new action.
   "id": 1,
   "uid": "maps-001_act_001_act_001",
   "activity_id": 1,
+  "actor_id": 1,
   "name": "Define map name",
-  "actor": "PM",
+  "actor_name": "PM",
   "priority": "Need",
   "description": "The user defines a unique name",
   "created_at": "2026-04-13T10:00:00.000Z",
@@ -294,6 +312,7 @@ Update an action.
 **Request**:
 ```json
 {
+  "actor_id": 2,
   "name": "Define map name (Updated)",
   "priority": "Want"
 }
@@ -305,8 +324,9 @@ Update an action.
   "id": 1,
   "uid": "maps-001_act_001_act_001",
   "activity_id": 1,
+  "actor_id": 2,
   "name": "Define map name (Updated)",
-  "actor": "PM",
+  "actor_name": "Developer",
   "priority": "Want",
   "description": "The user defines a unique name",
   "created_at": "2026-04-13T10:00:00.000Z",
@@ -369,6 +389,114 @@ Add a dependency to an action.
 Remove a dependency.
 
 **Response**: 204 No Content
+
+---
+
+## Actor Endpoints
+
+### GET /actors
+
+Get all actors.
+
+**Response** (200):
+```json
+[
+  {
+    "id": 1,
+    "uid": "actor-001",
+    "name": "PM",
+    "description": "Product Manager",
+    "created_at": "2026-04-13T10:00:00.000Z",
+    "updated_at": "2026-04-13T10:00:00.000Z"
+  }
+]
+```
+
+### GET /actors/:id
+
+Get actor by ID.
+
+**Response** (200):
+```json
+{
+  "id": 1,
+  "uid": "actor-001",
+  "name": "PM",
+  "description": "Product Manager",
+  "created_at": "2026-04-13T10:00:00.000Z",
+  "updated_at": "2026-04-13T10:00:00.000Z"
+}
+```
+
+### POST /actors
+
+Create a new actor.
+
+**Request**:
+```json
+{
+  "uid": "actor-001",
+  "name": "PM",
+  "description": "Product Manager"
+}
+```
+
+**Response** (201):
+```json
+{
+  "id": 1,
+  "uid": "actor-001",
+  "name": "PM",
+  "description": "Product Manager",
+  "created_at": "2026-04-13T10:00:00.000Z",
+  "updated_at": "2026-04-13T10:00:00.000Z"
+}
+```
+
+### PUT /actors/:id
+
+Update an actor.
+
+**Request**:
+```json
+{
+  "name": "Product Manager",
+  "description": "Updated description"
+}
+```
+
+**Response** (200):
+```json
+{
+  "id": 1,
+  "uid": "actor-001",
+  "name": "Product Manager",
+  "description": "Updated description",
+  "created_at": "2026-04-13T10:00:00.000Z",
+  "updated_at": "2026-04-13T11:00:00.000Z"
+}
+```
+
+### DELETE /actors/:id
+
+Delete an actor. Actions using this actor will have their actor_id set to NULL.
+
+**Response**: 204 No Content
+
+---
+
+## Health Check
+
+### GET /health
+
+Health check endpoint.
+
+**Response** (200):
+```json
+{
+  "status": "ok"
+}
+```
 
 ---
 
