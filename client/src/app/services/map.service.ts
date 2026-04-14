@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Map } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapService {
-  private apiUrl = '/api/maps';
+  private apiUrl = `${environment.apiUrl}/maps`;
 
   constructor(private http: HttpClient) {}
 
