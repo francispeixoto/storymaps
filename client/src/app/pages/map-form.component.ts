@@ -161,22 +161,96 @@ import { Map, Activity, Action } from '../models';
 
           <!-- Activity List -->
           <div *ngIf="activities.length === 0" class="text-gray-500">No activities yet. Add your first activity above.</div>
-          <div *ngFor="let activity of activities" class="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
-            <div>
-              <span class="font-medium">{{ activity.name }}</span>
-              <span [class]="getPriorityClass(activity.priority)" class="ml-2 px-2 py-0.5 text-xs rounded">
-                {{ activity.priority }}
-              </span>
+          <div *ngFor="let activity of activities" class="border-b border-gray-200 last:border-0">
+            <div class="flex items-center justify-between py-2">
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="toggleActivityActions(activity.id)"
+                  class="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  {{ expandedActivityId === activity.id ? '▼' : '▶' }}
+                </button>
+                <span class="font-medium">{{ activity.name }}</span>
+                <span [class]="getPriorityClass(activity.priority)" class="px-2 py-0.5 text-xs rounded">
+                  {{ activity.priority }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-400">{{ activity.uid }}</span>
+                <button
+                  type="button"
+                  (click)="deleteActivity(activity.id)"
+                  class="text-red-600 hover:text-red-800 text-sm"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-400">{{ activity.uid }}</span>
-              <button
-                type="button"
-                (click)="deleteActivity(activity.id)"
-                class="text-red-600 hover:text-red-800 text-sm"
-              >
-                Delete
-              </button>
+            <!-- Actions inside activity (edit mode) -->
+            <div *ngIf="expandedActivityId === activity.id" class="ml-6 pl-4 border-l-2 border-gray-200 pb-2">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-500">Actions ({{ getActivityActions(activity.id).length }})</span>
+                <button
+                  type="button"
+                  (click)="showAddActionForm(activity.id)"
+                  class="text-xs text-indigo-600 hover:text-indigo-800"
+                >
+                  {{ addActionToActivityId === activity.id ? 'Cancel' : '+ Add Action' }}
+                </button>
+              </div>
+              <!-- Add Action Form -->
+              <div *ngIf="addActionToActivityId === activity.id" class="mb-2 p-2 bg-gray-50 rounded text-sm">
+                <form [formGroup]="actionForm" (ngSubmit)="addAction(activity.id)" class="space-y-2">
+                  <input
+                    type="text"
+                    formControlName="name"
+                    placeholder="Action name *"
+                    class="w-full rounded border-gray-300 px-2 py-1 text-sm"
+                  />
+                  <div class="flex gap-2">
+                    <select formControlName="actor" class="rounded border-gray-300 px-2 py-1 text-sm">
+                      <option value="PM">PM</option>
+                      <option value="Developer">Developer</option>
+                      <option value="DevOps">DevOps</option>
+                    </select>
+                    <select formControlName="priority" class="rounded border-gray-300 px-2 py-1 text-sm">
+                      <option value="Need">Need</option>
+                      <option value="Want">Want</option>
+                      <option value="Nice">Nice</option>
+                    </select>
+                  </div>
+                  <textarea
+                    formControlName="description"
+                    placeholder="Description (optional)"
+                    rows="2"
+                    class="w-full rounded border-gray-300 px-2 py-1 text-sm"
+                  ></textarea>
+                  <button
+                    type="submit"
+                    [disabled]="actionForm.invalid || submittingAction"
+                    class="px-2 py-1 bg-indigo-600 text-white text-xs rounded"
+                  >
+                    {{ submittingAction ? 'Adding...' : 'Add' }}
+                  </button>
+                </form>
+              </div>
+              <!-- Actions List -->
+              <div *ngFor="let action of getActivityActions(activity.id)" class="flex items-center justify-between py-1 text-sm border-b border-gray-100 last:border-0">
+                <div class="flex items-center gap-2">
+                  <span>{{ action.name }}</span>
+                  <span [class]="getActorClass(action.actor)" class="px-1.5 py-0.5 text-xs rounded">{{ action.actor }}</span>
+                  <span [class]="getPriorityClass(action.priority)" class="px-1.5 py-0.5 text-xs rounded">{{ action.priority }}</span>
+                </div>
+                <button
+                  type="button"
+                  (click)="deleteAction(action.id, activity.id)"
+                  class="text-red-600 hover:text-red-800 text-xs"
+                >
+                  Delete
+                </button>
+              </div>
+              <div *ngIf="getActivityActions(activity.id).length === 0" class="text-gray-400 text-sm py-1">No actions</div>
             </div>
           </div>
         </div>
@@ -206,8 +280,10 @@ import { Map, Activity, Action } from '../models';
 export class MapFormComponent implements OnInit {
   mapForm!: FormGroup;
   activityForm!: FormGroup;
+  actionForm!: FormGroup;
   submitting = false;
   submittingActivity = false;
+  submittingAction = false;
   error = '';
   mode: 'create' | 'edit' | 'view' = 'create';
   map: Map | null = null;
@@ -216,6 +292,7 @@ export class MapFormComponent implements OnInit {
   actionsByActivity: { [activityId: number]: Action[] } = {};
   expandedActivityId: number | null = null;
   showActivityForm = false;
+  addActionToActivityId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -235,6 +312,13 @@ export class MapFormComponent implements OnInit {
     this.activityForm = this.fb.group({
       name: ['', Validators.required],
       priority: ['Need', Validators.required]
+    });
+
+    this.actionForm = this.fb.group({
+      name: ['', Validators.required],
+      actor: ['PM', Validators.required],
+      priority: ['Need', Validators.required],
+      description: ['']
     });
 
     this.route.data.subscribe(data => {
@@ -329,6 +413,51 @@ export class MapFormComponent implements OnInit {
     this.activityService.delete(id).subscribe({
       next: () => this.loadActivities(),
       error: (err) => console.error('Error deleting activity:', err)
+    });
+  }
+
+  showAddActionForm(activityId: number): void {
+    this.addActionToActivityId = this.addActionToActivityId === activityId ? null : activityId;
+    if (this.addActionToActivityId === activityId) {
+      this.actionForm.reset({ actor: 'PM', priority: 'Need' });
+    }
+  }
+
+  addAction(activityId: number): void {
+    if (this.actionForm.invalid) return;
+    
+    this.submittingAction = true;
+    const { name, actor, priority, description } = this.actionForm.value;
+    
+    this.actionService.create({
+      name,
+      actor,
+      priority,
+      description,
+      activity_id: activityId
+    }).subscribe({
+      next: () => {
+        this.loadActionsForActivities(this.activities);
+        this.actionForm.reset({ actor: 'PM', priority: 'Need' });
+        this.addActionToActivityId = null;
+        this.submittingAction = false;
+      },
+      error: (err) => {
+        console.error('Error adding action:', err);
+        this.submittingAction = false;
+      }
+    });
+  }
+
+  deleteAction(actionId: number, activityId: number): void {
+    if (!confirm('Are you sure you want to delete this action?')) return;
+    
+    this.actionService.delete(actionId).subscribe({
+      next: () => {
+        const actions = this.actionsByActivity[activityId] || [];
+        this.actionsByActivity[activityId] = actions.filter(a => a.id !== actionId);
+      },
+      error: (err) => console.error('Error deleting action:', err)
     });
   }
 
