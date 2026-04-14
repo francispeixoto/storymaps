@@ -75,6 +75,29 @@ export function initDatabase(): void {
     CREATE INDEX IF NOT EXISTS idx_action_dependencies_action_id ON action_dependencies(action_id);
   `);
 
+  // Migration: add actors table and actor_id column if missing
+  try {
+    const hasActorsTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='actors'").get();
+    if (!hasActorsTable) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS actors (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          uid TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+    const hasActorId = db.prepare("PRAGMA table_info(actions)").all().some((col: any) => col.name === 'actor_id');
+    if (!hasActorId) {
+      db.exec('ALTER TABLE actions ADD COLUMN actor_id INTEGER REFERENCES actors(id) ON DELETE SET NULL');
+    }
+  } catch (e) {
+    // Ignore migration errors
+  }
+
   console.log('Database initialized');
 }
 
