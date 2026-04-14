@@ -4,7 +4,7 @@ meta {
   version: 1.0.0
 }
 
-put http://localhost:3000/api/actors/:id {
+put {{baseUrl}}/api/actors/:id {
   body: json({
     name: "Updated Actor",
     description: "Updated description"

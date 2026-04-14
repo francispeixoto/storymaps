@@ -1,14 +1,14 @@
 meta {
-  name: Get Maps
+  name: Health Check
   type: http
   version: 1.0.0
 }
 
-get {{baseUrl}}/api/maps {
+get {{baseUrl}}/health {
   response {
     status: 200
     body: json({
-      maps: []
+      status: "ok"
     })
   }
 }

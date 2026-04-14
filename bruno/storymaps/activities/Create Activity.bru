@@ -4,7 +4,7 @@ meta {
   version: 1.0.0
 }
 
-post http://localhost:3000/api/activities {
+post {{baseUrl}}/api/activities {
   body: json({
     map_id: 1,
     name: "New Activity",

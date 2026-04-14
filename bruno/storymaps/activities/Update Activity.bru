@@ -4,7 +4,7 @@ meta {
   version: 1.0.0
 }
 
-put http://localhost:3000/api/activities/:id {
+put {{baseUrl}}/api/activities/:id {
   body: json({
     name: "Updated Activity",
     priority: "Want"

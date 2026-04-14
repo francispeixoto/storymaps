@@ -1,0 +1,20 @@
+{
+  "name": "storymaps",
+  "version": "1.0.0",
+  "type": "collection",
+  "default": "dev",
+  "environments": [
+    {
+      "name": "dev",
+      "uid": "dev",
+      "variables": [
+        {
+          "uid": "baseUrl",
+          "name": "baseUrl",
+          "value": "http://localhost:3000",
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}

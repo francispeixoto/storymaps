@@ -4,7 +4,7 @@ meta {
   version: 1.0.0
 }
 
-post http://localhost:3000/api/actions/:id/dependencies {
+post {{baseUrl}}/api/actions/:id/dependencies {
   body: json({
     depends_on_action_id: 2
   })
