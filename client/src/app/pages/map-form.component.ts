@@ -210,10 +210,13 @@ import { Map, Activity, Action, Actor } from '../models';
                     class="w-full rounded border-gray-300 px-2 py-1 text-sm"
                   />
                   <div class="flex gap-2">
-                    <select formControlName="actor_id" class="rounded border-gray-300 px-2 py-1 text-sm">
-                      <option [ngValue]="null">Select actor...</option>
-                      <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
-                    </select>
+                    <div class="flex items-center gap-1">
+                      <select formControlName="actor_id" class="rounded border-gray-300 px-2 py-1 text-sm">
+                        <option [ngValue]="null">Select actor...</option>
+                        <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
+                      </select>
+                      <button type="button" (click)="showNewActorModal = true" class="text-indigo-600 hover:text-indigo-800 text-xs">+ New</button>
+                    </div>
                     <select formControlName="priority" class="rounded border-gray-300 px-2 py-1 text-sm">
                       <option value="Need">Need</option>
                       <option value="Want">Want</option>
@@ -274,6 +277,29 @@ import { Map, Activity, Action, Actor } from '../models';
 
         <p *ngIf="error" class="text-sm text-red-600">{{ error }}</p>
       </form>
+
+      <!-- New Actor Modal -->
+      <div *ngIf="showNewActorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <h3 class="text-lg font-medium mb-4">Create New Actor</h3>
+          <form [formGroup]="newActorForm" (ngSubmit)="createActorAndSelect()" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Actor Name *</label>
+              <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Description</label>
+              <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="button" (click)="showNewActorModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+              <button type="submit" [disabled]="newActorForm.invalid || submittingNewActor" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">
+                {{ submittingNewActor ? 'Creating...' : 'Create' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   `
 })
@@ -294,6 +320,9 @@ export class MapFormComponent implements OnInit {
   showActivityForm = false;
   addActionToActivityId: number | null = null;
   actors: Actor[] = [];
+  showNewActorModal = false;
+  newActorForm!: FormGroup;
+  submittingNewActor = false;
 
   constructor(
     private fb: FormBuilder,
@@ -320,6 +349,11 @@ export class MapFormComponent implements OnInit {
       name: ['', Validators.required],
       actor_id: [null],
       priority: ['Need', Validators.required],
+      description: ['']
+    });
+
+    this.newActorForm = this.fb.group({
+      name: ['', Validators.required],
       description: ['']
     });
 
@@ -372,6 +406,27 @@ export class MapFormComponent implements OnInit {
     this.actorService.getAll().subscribe({
       next: (actors) => this.actors = actors,
       error: (err) => console.error('Error loading actors:', err)
+    });
+  }
+
+  createActorAndSelect(): void {
+    if (this.newActorForm.invalid) return;
+    
+    this.submittingNewActor = true;
+    const { name, description } = this.newActorForm.value;
+    
+    this.actorService.create({ name, description }).subscribe({
+      next: (actor) => {
+        this.actors = [...this.actors, actor];
+        this.actionForm.patchValue({ actor_id: actor.id });
+        this.showNewActorModal = false;
+        this.newActorForm.reset({ name: '', description: '' });
+        this.submittingNewActor = false;
+      },
+      error: (err) => {
+        console.error('Error creating actor:', err);
+        this.submittingNewActor = false;
+      }
     });
   }
 
