@@ -7,7 +7,7 @@ import { Actor } from '../models';
   providedIn: 'root'
 })
 export class ActorService {
-  private apiUrl = 'http://localhost:3000/api/actors';
+  private apiUrl = '/api/actors';
 
   constructor(private http: HttpClient) {}
 

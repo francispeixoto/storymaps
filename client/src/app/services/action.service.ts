@@ -7,7 +7,7 @@ import { Action, ActionDependency } from '../models';
   providedIn: 'root'
 })
 export class ActionService {
-  private apiUrl = 'http://localhost:3000/api/actions';
+  private apiUrl = '/api/actions';
 
   constructor(private http: HttpClient) {}
 
