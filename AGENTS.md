@@ -9,7 +9,9 @@
 **Core value**: Enable teams to create, maintain, and share user story maps through a frontend interface and API.
 
 **Key capabilities**:
-- Create/edit user story maps (steps, activities, user segments, backlogs)
+- Create/edit user story maps (maps, activities, actions)
+- Actor management (CRUD)
+- Kanban-style matrix view
 - Data management via UI and API
 - Self-hosted deployment
 
@@ -27,6 +29,7 @@
   - User guides: `docs/user/` (future)
   - Project root docs: (future documentation at root level)
 - Documentation changes follow the same PR/commit as the code they document
+- **Update Bruno collection (`bruno/`) before PR creation**
 
 ## Branching Strategy
 
@@ -42,15 +45,52 @@
 
 ## Development Commands
 
-> TODO: Add commands after code is added
+```bash
+# Backend (Express + SQLite)
+cd server && npm install && npm run dev
+# Server runs on http://localhost:3000
+
+# Frontend (Angular)
+cd client && npm install && npm run dev
+# Angular app runs on http://localhost:4200 (with API proxy)
+
+# Production (Docker)
+docker-compose up --build
+# App runs on http://localhost:8080
+```
 
 ## Architecture
 
-> TODO: Document structure after code is added
+```
+storymaps/
+├── server/
+│   ├── src/
+│   │   ├── controllers/   # Express route handlers
+│   │   ├── routes/     # API endpoints
+│   │   └── models/    # SQLite database
+│   └── dist/        # Compiled output
+├── client/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── pages/    # Angular page components
+│   │   │   └── services/ # API services
+│   │   └── styles.css
+│   └── dist/          # Built output
+├── docker/           # Docker configs
+└── bruno/         # API testing collection
+```
 
 ## Testing
 
-> TODO: Add test quirks after code is added
+Use Bruno collection for API testing:
+```bash
+# Import bruno/storymaps folder into Bruno app
+# Configure environment: baseUrl=http://localhost:3000
+```
+
+## Open Issues (P1-Need)
+
+- #15-28: Self-hosted deployment features (docker-compose, verify services, set env vars, start services, file import/export)
 
 ## Bruno Collection
 
