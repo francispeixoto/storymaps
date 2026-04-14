@@ -1,0 +1,16 @@
+meta {
+  name: Create Map
+  type: http
+  version: 1.0.0
+}
+
+post http://localhost:3000/api/maps {
+  body: json({
+    name: "My New Map",
+    description: "Map description"
+  })
+
+  response {
+    status: 201
+  }
+}

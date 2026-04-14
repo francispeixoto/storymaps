@@ -1,0 +1,11 @@
+meta {
+  name: Delete Map
+  type: http
+  version: 1.0.0
+}
+
+delete http://localhost:3000/api/maps/:id {
+  response {
+    status: 204
+  }
+}

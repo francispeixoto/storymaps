@@ -1,0 +1,14 @@
+meta {
+  name: Get Activities
+  type: http
+  version: 1.0.0
+}
+
+get http://localhost:3000/api/activities?map_id=1 {
+  response {
+    status: 200
+    body: json({
+      activities: []
+    })
+  }
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Get Map
+  type: http
+  version: 1.0.0
+}
+
+get http://localhost:3000/api/maps/:id {
+  response {
+    status: 200
+    body: json({
+      id: 1,
+      uid: "maps-1",
+      name: "",
+      description: ""
+    })
+  }
+}
