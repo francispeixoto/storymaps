@@ -51,3 +51,14 @@
 ## Testing
 
 > TODO: Add test quirks after code is added
+
+## Bruno Collection
+
+**Location:** `bruno/` directory
+
+**Purpose:** API testing collection for Bruno app
+
+**Maintenance:**
+- After any endpoint changes, update the `bruno/` collection
+- Update must happen **before PR creation** to keep API testing current
+- Include all new endpoints and remove deprecated ones

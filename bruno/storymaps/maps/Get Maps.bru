@@ -1,0 +1,14 @@
+meta {
+  name: Get Maps
+  type: http
+  version: 1.0.0
+}
+
+get http://localhost:3000/api/maps {
+  response {
+    status: 200
+    body: json({
+      maps: []
+    })
+  }
+}

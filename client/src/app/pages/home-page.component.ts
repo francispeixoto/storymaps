@@ -11,7 +11,10 @@ import { Map } from '../models';
   template: `
     <div>
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold">Your Maps</h2>
+        <div class="flex gap-4">
+          <h2 class="text-xl font-semibold">Your Maps</h2>
+          <a routerLink="/actors" class="text-sm text-indigo-600 hover:text-indigo-800 self-center">Manage Actors</a>
+        </div>
         <a
           routerLink="/maps/create"
           class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

@@ -1,0 +1,17 @@
+meta {
+  name: Update Action
+  type: http
+  version: 1.0.0
+}
+
+put http://localhost:3000/api/actions/:id {
+  body: json({
+    name: "Updated Action",
+    actor_id: 1,
+    priority: "Want"
+  })
+
+  response {
+    status: 200
+  }
+}

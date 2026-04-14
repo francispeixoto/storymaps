@@ -59,6 +59,9 @@ import { Map, Activity, Action } from '../models';
                     >
                       <div class="flex items-center justify-between">
                         <span class="font-medium">{{ action.name }}</span>
+                        <span class="ml-2 px-1.5 py-0.5 text-xs rounded bg-gray-100">
+                          {{ action.actor_name || '-' }}
+                        </span>
                       </div>
                       <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs">{{ action.description }}</p>
                     </div>
@@ -125,9 +128,6 @@ export class MapMatrixComponent implements OnInit {
         next: (actions) => {
           this.actions = [...this.actions, ...actions];
           loaded++;
-          if (loaded === activities.length) {
-            // All actions loaded
-          }
         },
         error: (err) => console.error('Error loading actions:', err)
       });
