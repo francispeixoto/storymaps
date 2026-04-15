@@ -397,7 +397,7 @@ Remove a dependency.
 
 ### GET /actors
 
-Get all actors.
+Get all actors. Each actor includes calculated satisfaction score and action count.
 
 **Response** (200):
 ```json
@@ -408,14 +408,16 @@ Get all actors.
     "name": "PM",
     "description": "Product Manager",
     "created_at": "2026-04-13T10:00:00.000Z",
-    "updated_at": "2026-04-13T10:00:00.000Z"
+    "updated_at": "2026-04-13T10:00:00.000Z",
+    "satisfaction": 75,
+    "action_count": 12
   }
 ]
 ```
 
 ### GET /actors/:id
 
-Get actor by ID.
+Get actor by ID. Includes calculated satisfaction score and action count.
 
 **Response** (200):
 ```json
@@ -425,7 +427,9 @@ Get actor by ID.
   "name": "PM",
   "description": "Product Manager",
   "created_at": "2026-04-13T10:00:00.000Z",
-  "updated_at": "2026-04-13T10:00:00.000Z"
+  "updated_at": "2026-04-13T10:00:00.000Z",
+  "satisfaction": 75,
+  "action_count": 12
 }
 ```
 
@@ -450,7 +454,9 @@ Create a new actor.
   "name": "PM",
   "description": "Product Manager",
   "created_at": "2026-04-13T10:00:00.000Z",
-  "updated_at": "2026-04-13T10:00:00.000Z"
+  "updated_at": "2026-04-13T10:00:00.000Z",
+  "satisfaction": 0,
+  "action_count": 0
 }
 ```
 
@@ -474,7 +480,9 @@ Update an actor.
   "name": "Product Manager",
   "description": "Updated description",
   "created_at": "2026-04-13T10:00:00.000Z",
-  "updated_at": "2026-04-13T11:00:00.000Z"
+  "updated_at": "2026-04-13T11:00:00.000Z",
+  "satisfaction": 75,
+  "action_count": 12
 }
 ```
 

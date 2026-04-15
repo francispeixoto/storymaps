@@ -14,6 +14,8 @@ export interface Actor {
   description?: string;
   created_at: string;
   updated_at: string;
+  satisfaction?: number;
+  action_count?: number;
 }
 
 export interface Activity {

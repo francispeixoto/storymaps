@@ -14,8 +14,15 @@ import { Actor, ActorAction, Map } from '../models';
     <div class="max-w-full mx-auto">
       <div class="flex justify-between items-center mb-6">
         <div>
-          <h2 class="text-2xl font-bold">{{ actor?.name }}</h2>
+          <div class="flex items-center gap-4">
+            <h2 class="text-2xl font-bold">{{ actor?.name }}</h2>
+            <div *ngIf="actor?.action_count && (actor?.action_count || 0) > 0" [class]="getSatisfactionClass(actor?.satisfaction)" class="flex items-center gap-1">
+              <span class="text-xl font-bold">{{ actor?.satisfaction }}</span>
+              <span class="text-sm">({{ getSatisfactionCategory(actor?.satisfaction) }})</span>
+            </div>
+          </div>
           <p *ngIf="actor?.description" class="text-gray-600 mt-1">{{ actor?.description }}</p>
+          <p *ngIf="actor?.action_count" class="text-sm text-gray-500 mt-1">{{ actor?.action_count }} action{{ actor?.action_count !== 1 ? 's' : '' }}</p>
         </div>
         <div class="flex gap-2">
           <button
@@ -198,5 +205,19 @@ this.actorService.getActions(this.actorId).subscribe({
     if (this.actorId) {
       this.router.navigate(['/actors', this.actorId]);
     }
+  }
+
+  getSatisfactionClass(score: number | undefined): string {
+    if (score === undefined || score === 0) return 'text-gray-500';
+    if (score >= 50) return 'text-green-600';
+    if (score >= 0) return 'text-yellow-600';
+    return 'text-red-600';
+  }
+
+  getSatisfactionCategory(score: number | undefined): string {
+    if (score === undefined || score === 0) return 'N/A';
+    if (score >= 50) return 'Promoter';
+    if (score >= 0) return 'Passive';
+    return 'Detractor';
   }
 }

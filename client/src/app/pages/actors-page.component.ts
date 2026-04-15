@@ -20,6 +20,15 @@ import { Actor } from '../models';
         </a>
       </div>
 
+      <div *ngIf="actors.length > 0" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-700">Global Satisfaction:</span>
+          <span [class]="getSatisfactionClass(globalSatisfaction)">
+            {{ globalSatisfaction }} - {{ getSatisfactionCategory(globalSatisfaction) }}
+          </span>
+        </div>
+      </div>
+
       <div *ngIf="actors.length === 0" class="text-center py-12">
         <p class="text-gray-600 mb-4">No actors yet. Create your first actor!</p>
       </div>
@@ -30,9 +39,20 @@ import { Actor } from '../models';
           [routerLink]="['/actors', actor.id]"
           class="block bg-white rounded-lg shadow p-4 border border-gray-200 hover:border-indigo-500 cursor-pointer transition-colors"
         >
-          <h3 class="text-lg font-medium text-gray-900">{{ actor.name }}</h3>
-          <p *ngIf="actor.description" class="mt-1 text-sm text-gray-500">{{ actor.description }}</p>
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="text-lg font-medium text-gray-900">{{ actor.name }}</h3>
+              <p *ngIf="actor.description" class="mt-1 text-sm text-gray-500">{{ actor.description }}</p>
+            </div>
+            <div *ngIf="actor.action_count && actor.action_count > 0" [class]="getSatisfactionClass(actor.satisfaction)">
+              <span class="text-lg font-bold">{{ actor.satisfaction }}</span>
+              <span class="text-xs ml-1">{{ getSatisfactionCategory(actor.satisfaction) }}</span>
+            </div>
+          </div>
           <p class="mt-2 text-xs text-gray-400">UID: {{ actor.uid }}</p>
+          <p *ngIf="actor.action_count" class="text-xs text-gray-500 mt-1">
+            {{ actor.action_count }} action{{ actor.action_count !== 1 ? 's' : '' }}
+          </p>
         </a>
       </div>
     </div>
@@ -40,6 +60,7 @@ import { Actor } from '../models';
 })
 export class ActorsPageComponent implements OnInit {
   actors: Actor[] = [];
+  globalSatisfaction = 0;
 
   constructor(private actorService: ActorService) {}
 
@@ -49,8 +70,35 @@ export class ActorsPageComponent implements OnInit {
 
   loadActors(): void {
     this.actorService.getAll().subscribe({
-      next: (actors) => this.actors = actors,
+      next: (actors) => {
+        this.actors = actors;
+        this.calculateGlobalSatisfaction();
+      },
       error: (err) => console.error('Error loading actors:', err)
     });
+  }
+
+  calculateGlobalSatisfaction(): void {
+    const actorsWithActions = this.actors.filter(a => a.action_count && a.action_count > 0);
+    if (actorsWithActions.length === 0) {
+      this.globalSatisfaction = 0;
+      return;
+    }
+    const sum = actorsWithActions.reduce((acc, a) => acc + (a.satisfaction || 0), 0);
+    this.globalSatisfaction = Math.round(sum / actorsWithActions.length);
+  }
+
+  getSatisfactionClass(score: number | undefined): string {
+    if (score === undefined || score === 0) return 'text-gray-500';
+    if (score >= 50) return 'text-green-600';
+    if (score >= 0) return 'text-yellow-600';
+    return 'text-red-600';
+  }
+
+  getSatisfactionCategory(score: number | undefined): string {
+    if (score === undefined || score === 0) return 'N/A';
+    if (score >= 50) return 'Promoter';
+    if (score >= 0) return 'Passive';
+    return 'Detractor';
   }
 }
