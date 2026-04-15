@@ -6,12 +6,13 @@ import { MapService } from '../services/map.service';
 import { ActivityService } from '../services/activity.service';
 import { ActionService } from '../services/action.service';
 import { ActorService } from '../services/actor.service';
+import { ConfirmDeleteDialogComponent } from '../components/confirm-delete-dialog.component';
 import { Map, Activity, Action, Actor } from '../models';
 
 @Component({
   selector: 'app-map-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ConfirmDeleteDialogComponent],
   template: `
     <div class="max-w-4xl mx-auto">
       <div class="flex justify-between items-center mb-6">
@@ -256,7 +257,7 @@ import { Map, Activity, Action, Actor } from '../models';
                 <span class="text-sm text-gray-400">{{ activity.uid }}</span>
                 <button
                   type="button"
-                  (click)="deleteActivity(activity.id)"
+                  (click)="deleteActivity(activity.id, activity.name)"
                   class="text-red-600 hover:text-red-800 text-sm"
                 >
                   Delete
@@ -322,7 +323,7 @@ import { Map, Activity, Action, Actor } from '../models';
                 </div>
                 <button
                   type="button"
-                  (click)="deleteAction(action.id, activity.id)"
+                  (click)="deleteAction(action.id, activity.id, action.name)"
                   class="text-red-600 hover:text-red-800 text-xs"
                 >
                   Delete
@@ -375,6 +376,14 @@ import { Map, Activity, Action, Actor } from '../models';
           </form>
         </div>
       </div>
+
+      <app-confirm-delete-dialog
+        *ngIf="showDeleteConfirm"
+        [itemName]="pendingDeleteItem?.name || ''"
+        [itemType]="pendingDeleteItem?.type || 'action'"
+        (confirmed)="onDeleteConfirmed()"
+        (cancelled)="onDeleteCancelled()"
+      ></app-confirm-delete-dialog>
     </div>
   `
 })
@@ -400,6 +409,8 @@ export class MapFormComponent implements OnInit {
   showNewActorModal = false;
   newActorForm!: FormGroup;
   submittingNewActor = false;
+  showDeleteConfirm = false;
+  pendingDeleteItem: { id: number; activityId?: number; name: string; type: 'activity' | 'action' } | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -607,13 +618,43 @@ export class MapFormComponent implements OnInit {
     });
   }
 
-  deleteActivity(id: number): void {
-    if (!confirm('Are you sure you want to delete this activity?')) return;
-    
-    this.activityService.delete(id).subscribe({
-      next: () => this.loadActivities(),
-      error: (err) => console.error('Error deleting activity:', err)
-    });
+  deleteActivity(id: number, name: string): void {
+    this.pendingDeleteItem = { id, name, type: 'activity' };
+    this.showDeleteConfirm = true;
+  }
+
+  onDeleteConfirmed(): void {
+    if (!this.pendingDeleteItem) return;
+
+    if (this.pendingDeleteItem.type === 'activity') {
+      this.activityService.delete(this.pendingDeleteItem.id).subscribe({
+        next: () => {
+          this.loadActivities();
+          this.closeDeleteDialog();
+        },
+        error: (err) => console.error('Error deleting activity:', err)
+      });
+    } else if (this.pendingDeleteItem.type === 'action') {
+      this.actionService.delete(this.pendingDeleteItem.id).subscribe({
+        next: () => {
+          if (this.pendingDeleteItem?.activityId) {
+            const actions = this.actionsByActivity[this.pendingDeleteItem.activityId] || [];
+            this.actionsByActivity[this.pendingDeleteItem.activityId] = actions.filter(a => a.id !== this.pendingDeleteItem!.id);
+          }
+          this.closeDeleteDialog();
+        },
+        error: (err) => console.error('Error deleting action:', err)
+      });
+    }
+  }
+
+  closeDeleteDialog(): void {
+    this.showDeleteConfirm = false;
+    this.pendingDeleteItem = null;
+  }
+
+  onDeleteCancelled(): void {
+    this.closeDeleteDialog();
   }
 
   showAddActionForm(activityId: number): void {
@@ -649,16 +690,9 @@ export class MapFormComponent implements OnInit {
     });
   }
 
-  deleteAction(actionId: number, activityId: number): void {
-    if (!confirm('Are you sure you want to delete this action?')) return;
-    
-    this.actionService.delete(actionId).subscribe({
-      next: () => {
-        const actions = this.actionsByActivity[activityId] || [];
-        this.actionsByActivity[activityId] = actions.filter(a => a.id !== actionId);
-      },
-      error: (err) => console.error('Error deleting action:', err)
-    });
+  deleteAction(actionId: number, activityId: number, name: string): void {
+    this.pendingDeleteItem = { id: actionId, activityId, name, type: 'action' };
+    this.showDeleteConfirm = true;
   }
 
   getPriorityClass(priority: string): string {

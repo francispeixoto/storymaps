@@ -11,5 +11,6 @@ Metadata:
 
 | UID | Title | Actor | Priority | Inbound Dependencies |
 |-----|------|------|----------|---------------------|
-| maps-002_act_001_act_001 | Select map to view | PM | Need | maps-001_act_001_act_001 |
+| maps-002_act_001_act_001 | Select map to view | PM | Need | maps-002_act_001_act_001 |
 | maps-002_act_001_act_002 | Display story matrix | PM | Need | maps-002_act_001_act_001 |
+| maps-002_act_001_act_003 | Edit activity/action | PM | Need | maps-002_act_001_act_002 |
