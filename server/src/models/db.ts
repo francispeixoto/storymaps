@@ -38,7 +38,6 @@ export function initDatabase(): void {
       uid TEXT UNIQUE NOT NULL,
       map_id INTEGER NOT NULL,
       name TEXT NOT NULL,
-      priority TEXT CHECK(priority IN ('Need', 'Want', 'Nice')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
@@ -93,6 +92,17 @@ export function initDatabase(): void {
     const hasActorId = db.prepare("PRAGMA table_info(actions)").all().some((col: any) => col.name === 'actor_id');
     if (!hasActorId) {
       db.exec('ALTER TABLE actions ADD COLUMN actor_id INTEGER REFERENCES actors(id) ON DELETE SET NULL');
+    }
+  } catch (e) {
+    // Ignore migration errors
+  }
+
+  // Migration: drop priority column from activities if exists
+  try {
+    const activityCols = db.prepare("PRAGMA table_info(activities)").all() as any[];
+    const hasPriorityCol = activityCols.some((col: any) => col.name === 'priority');
+    if (hasPriorityCol) {
+      db.exec('ALTER TABLE activities DROP COLUMN priority');
     }
   } catch (e) {
     // Ignore migration errors

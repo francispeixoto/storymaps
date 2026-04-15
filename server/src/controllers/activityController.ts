@@ -22,9 +22,9 @@ export const getActivityById = (req: Request, res: Response): void => {
 };
 
 export const createActivity = (req: Request, res: Response): void => {
-  const { uid, map_id, name, priority } = req.body;
-  if (!uid || !map_id || !name || !priority) {
-    res.status(400).json({ error: 'uid, map_id, name, and priority are required' });
+  const { uid, map_id, name } = req.body;
+  if (!uid || !map_id || !name) {
+    res.status(400).json({ error: 'uid, map_id, and name are required' });
     return;
   }
   const mapExists = db.prepare('SELECT id FROM maps WHERE id = ?').get(map_id);
@@ -33,24 +33,24 @@ export const createActivity = (req: Request, res: Response): void => {
     return;
   }
   const stmt = db.prepare(
-    'INSERT INTO activities (uid, map_id, name, priority) VALUES (?, ?, ?, ?)'
+    'INSERT INTO activities (uid, map_id, name) VALUES (?, ?, ?)'
   );
-  const result = stmt.run(uid, map_id, name, priority);
+  const result = stmt.run(uid, map_id, name);
   const activity = db.prepare('SELECT * FROM activities WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(activity);
 };
 
 export const updateActivity = (req: Request, res: Response): void => {
-  const { name, priority } = req.body;
+  const { name } = req.body;
   const existing = db.prepare('SELECT * FROM activities WHERE id = ?').get(req.params.id);
   if (!existing) {
     res.status(404).json({ error: 'Activity not found' });
     return;
   }
   const stmt = db.prepare(
-    'UPDATE activities SET name = ?, priority = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    'UPDATE activities SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
   );
-  stmt.run(name, priority, req.params.id);
+  stmt.run(name, req.params.id);
   const activity = db.prepare('SELECT * FROM activities WHERE id = ?').get(req.params.id);
   res.json(activity);
 };

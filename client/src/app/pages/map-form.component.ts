@@ -67,9 +67,6 @@ import { Map, Activity, Action, Actor } from '../models';
                   {{ expandedActivityId === activity.id ? '▼' : '▶' }}
                 </button>
                 <span class="font-medium">{{ activity.name }}</span>
-                <span [class]="getPriorityClass(activity.priority)" class="px-2 py-0.5 text-xs rounded">
-                  {{ activity.priority }}
-                </span>
               </div>
               <button
                 type="button"
@@ -101,14 +98,6 @@ import { Map, Activity, Action, Actor } from '../models';
               <div>
                 <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
                 <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Priority *</label>
-                <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
-                  <option value="Need">Need</option>
-                  <option value="Want">Want</option>
-                  <option value="Nice">Nice</option>
-                </select>
               </div>
               <div class="flex justify-end gap-2">
                 <button type="button" (click)="showAddActivityModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
@@ -249,9 +238,6 @@ import { Map, Activity, Action, Actor } from '../models';
                   {{ expandedActivityId === activity.id ? '▼' : '▶' }}
                 </button>
                 <span class="font-medium">{{ activity.name }}</span>
-                <span [class]="getPriorityClass(activity.priority)" class="px-2 py-0.5 text-xs rounded">
-                  {{ activity.priority }}
-                </span>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-400">{{ activity.uid }}</span>
@@ -429,8 +415,7 @@ export class MapFormComponent implements OnInit {
     });
 
     this.activityForm = this.fb.group({
-      name: ['', Validators.required],
-      priority: ['Need', Validators.required]
+      name: ['', Validators.required]
     });
 
     this.actionForm = this.fb.group({
@@ -541,16 +526,15 @@ export class MapFormComponent implements OnInit {
     if (!this.mapId || this.activityForm.invalid) return;
     
     this.submittingActivity = true;
-    const { name, priority } = this.activityForm.value;
+    const { name } = this.activityForm.value;
     
     this.activityService.create({
       name,
-      priority,
       map_id: this.mapId
     }).subscribe({
       next: () => {
         this.loadActivities();
-        this.activityForm.reset({ priority: 'Need' });
+        this.activityForm.reset();
         this.showAddActivityModal = false;
         this.submittingActivity = false;
       },
@@ -598,16 +582,15 @@ export class MapFormComponent implements OnInit {
     if (!this.mapId || this.activityForm.invalid) return;
     
     this.submittingActivity = true;
-    const { name, priority } = this.activityForm.value;
+    const { name } = this.activityForm.value;
     
     this.activityService.create({
       name,
-      priority,
       map_id: this.mapId
     }).subscribe({
       next: () => {
         this.loadActivities();
-        this.activityForm.reset({ priority: 'Need' });
+        this.activityForm.reset();
         this.showActivityForm = false;
         this.submittingActivity = false;
       },

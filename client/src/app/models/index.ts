@@ -21,7 +21,6 @@ export interface Activity {
   uid: string;
   map_id: number;
   name: string;
-  priority: 'Need' | 'Want' | 'Nice';
   created_at: string;
   updated_at: string;
 }
