@@ -11,12 +11,11 @@ import { ActorMatrixComponent } from './actor-matrix.component';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, ActorMatrixComponent],
   template: `
-    <div class="max-w-4xl mx-auto">
+    <!-- View Mode - Full Width -->
+    <div *ngIf="mode === 'view'" class="max-w-full mx-auto">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">
-          {{ mode === 'create' ? 'Create New Actor' : mode === 'edit' ? 'Edit Actor' : 'Actor Details' }}
-        </h2>
-        <div class="flex gap-2" *ngIf="mode === 'view'">
+        <h2 class="text-2xl font-bold">Actor Details</h2>
+        <div class="flex gap-2">
           <button
             (click)="goToEdit()"
             class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -31,14 +30,18 @@ import { ActorMatrixComponent } from './actor-matrix.component';
           </button>
         </div>
       </div>
+      <app-actor-matrix></app-actor-matrix>
+    </div>
 
-      <!-- View Mode - Show Matrix -->
-      <div *ngIf="mode === 'view'">
-        <app-actor-matrix></app-actor-matrix>
+    <!-- Form Mode (Create/Edit) - Narrow Width -->
+    <div *ngIf="mode !== 'view'" class="max-w-4xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">
+          {{ mode === 'create' ? 'Create New Actor' : 'Edit Actor' }}
+        </h2>
       </div>
 
-      <!-- Form Mode (Create/Edit) -->
-      <form *ngIf="mode !== 'view'" [formGroup]="actorForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <form [formGroup]="actorForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Actor Details</h3>
           <div>
