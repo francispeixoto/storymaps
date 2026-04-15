@@ -89,14 +89,14 @@ export class ActorsPageComponent implements OnInit {
   }
 
   getSatisfactionClass(score: number | undefined): string {
-    if (score === undefined || score === 0) return 'text-gray-500';
+    if (score === undefined) return 'text-gray-500';
     if (score >= 50) return 'text-green-600';
     if (score >= 0) return 'text-yellow-600';
     return 'text-red-600';
   }
 
   getSatisfactionCategory(score: number | undefined): string {
-    if (score === undefined || score === 0) return 'N/A';
+    if (score === undefined) return 'N/A';
     if (score >= 50) return 'Promoter';
     if (score >= 0) return 'Passive';
     return 'Detractor';
