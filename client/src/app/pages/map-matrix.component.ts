@@ -45,9 +45,10 @@ import { Map, Activity, Action, Actor } from '../models';
       <div *ngIf="map" class="mb-4 flex items-center gap-4">
         <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-gray-700">Implementation:</span>
-          <div class="flex gap-2">
-            <label *ngFor="let state of implementationStates" class="flex items-center gap-1 text-sm">
+          <div class="flex gap-3">
+            <label *ngFor="let state of implementationStates" class="flex items-center gap-1.5 text-sm cursor-pointer">
               <input type="checkbox" [checked]="selectedImplementationStates.includes(state)" (change)="toggleImplementationState(state)" class="rounded border-gray-300" />
+              <span [class]="getImplementationStateDot(state)" class="w-2.5 h-2.5 rounded-full"></span>
               <span [class]="getImplementationStateClass(state)">{{ state }}</span>
             </label>
           </div>

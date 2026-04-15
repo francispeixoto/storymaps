@@ -24,16 +24,28 @@ import { Actor, ActorAction, Map } from '../models';
         <p *ngIf="actor?.action_count" class="text-sm text-gray-500 mt-1">{{ actor?.action_count }} action{{ actor?.action_count !== 1 ? 's' : '' }}</p>
       </div>
 
-      <div *ngIf="maps.length > 0" class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Map(s):</label>
-        <div class="flex flex-wrap gap-2">
-          <label *ngFor="let map of maps" class="flex items-center gap-1 px-3 py-1 rounded border cursor-pointer hover:bg-gray-50"
-            [class.bg-indigo-50]="isMapSelected(map.id)"
-            [class.border-indigo-500]="isMapSelected(map.id)"
-            [class.border-gray-300]="!isMapSelected(map.id)">
-            <input type="checkbox" [checked]="isMapSelected(map.id)" (change)="toggleMap(map.id)" class="sr-only" />
-            <span class="text-sm">{{ map.name }}</span>
-          </label>
+      <div class="mb-4 flex flex-wrap items-center gap-6">
+        <div *ngIf="maps.length > 0" class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-700">Map:</span>
+          <div class="flex flex-wrap gap-2">
+            <label *ngFor="let map of maps" class="flex items-center gap-1 px-3 py-1 rounded border cursor-pointer hover:bg-gray-50"
+              [class.bg-indigo-50]="isMapSelected(map.id)"
+              [class.border-indigo-500]="isMapSelected(map.id)"
+              [class.border-gray-300]="!isMapSelected(map.id)">
+              <input type="checkbox" [checked]="isMapSelected(map.id)" (change)="toggleMap(map.id)" class="sr-only" />
+              <span class="text-sm">{{ map.name }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-700">Implementation:</span>
+          <div class="flex gap-3">
+            <label *ngFor="let state of implementationStates" class="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" [checked]="selectedImplementationStates.includes(state)" (change)="toggleImplementationState(state)" class="rounded border-gray-300" />
+              <span [class]="getImplementationStateDot(state)" class="w-2.5 h-2.5 rounded-full"></span>
+              <span [class]="getImplementationStateClass(state)">{{ state }}</span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -93,6 +105,8 @@ export class ActorMatrixComponent implements OnInit {
   maps: Map[] = [];
   selectedMapIds: number[] = [];
   priorities = ['Need', 'Want', 'Nice'];
+  implementationStates = ['Full', 'Partial', 'None'];
+  selectedImplementationStates: string[] = ['Full', 'Partial', 'None'];
   actorId: number | null = null;
 
   constructor(
@@ -156,6 +170,15 @@ export class ActorMatrixComponent implements OnInit {
     }
   }
 
+  toggleImplementationState(state: string): void {
+    const index = this.selectedImplementationStates.indexOf(state);
+    if (index > -1) {
+      this.selectedImplementationStates.splice(index, 1);
+    } else {
+      this.selectedImplementationStates.push(state);
+    }
+  }
+
   get uniqueActivities(): string[] {
     const activities = new Set(this.filteredActions.map(a => a.activity_name));
     return Array.from(activities).sort();
@@ -164,7 +187,7 @@ export class ActorMatrixComponent implements OnInit {
   get filteredActions(): ActorAction[] {
     return this.actions.filter(a => {
       const map = this.maps.find(m => m.name === a.map_name);
-      return map && this.selectedMapIds.includes(map.id);
+      return map && this.selectedMapIds.includes(map.id) && this.selectedImplementationStates.includes(a.implementation_state);
     });
   }
 
@@ -203,6 +226,15 @@ export class ActorMatrixComponent implements OnInit {
       case 'Partial': return 'bg-yellow-500';
       case 'None': return 'bg-red-500';
       default: return 'bg-gray-500';
+    }
+  }
+
+  getImplementationStateClass(state: string): string {
+    switch (state) {
+      case 'Full': return 'text-green-600';
+      case 'Partial': return 'text-yellow-600';
+      case 'None': return 'text-red-600';
+      default: return 'text-gray-600';
     }
   }
 }
