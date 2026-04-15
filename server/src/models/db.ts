@@ -50,6 +50,7 @@ export function initDatabase(): void {
       actor_id INTEGER,
       name TEXT NOT NULL,
       priority TEXT CHECK(priority IN ('Need', 'Want', 'Nice')),
+      implementation_state TEXT NOT NULL DEFAULT 'None' CHECK(implementation_state IN ('Full', 'Partial', 'None')),
       description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -103,6 +104,19 @@ export function initDatabase(): void {
     const hasPriorityCol = activityCols.some((col: any) => col.name === 'priority');
     if (hasPriorityCol) {
       db.exec('ALTER TABLE activities DROP COLUMN priority');
+    }
+  } catch (e) {
+    // Ignore migration errors
+  }
+
+  // Migration: add implementation_state column to actions if missing
+  try {
+    const actionCols = db.prepare("PRAGMA table_info(actions)").all() as any[];
+    const hasImplStateCol = actionCols.some((col: any) => col.name === 'implementation_state');
+    if (!hasImplStateCol) {
+      db.exec('ALTER TABLE actions ADD COLUMN implementation_state TEXT NOT NULL DEFAULT \'None\' CHECK(implementation_state IN (\'Full\', \'Partial\', \'None\'))');
+    } else {
+      db.exec('UPDATE actions SET implementation_state = \'None\' WHERE implementation_state IS NULL');
     }
   } catch (e) {
     // Ignore migration errors

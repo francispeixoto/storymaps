@@ -42,6 +42,18 @@ import { Map, Activity, Action, Actor } from '../models';
         </div>
       </div>
 
+      <div *ngIf="map" class="mb-4 flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-700">Implementation:</span>
+          <div class="flex gap-2">
+            <label *ngFor="let state of implementationStates" class="flex items-center gap-1 text-sm">
+              <input type="checkbox" [checked]="selectedImplementationStates.includes(state)" (change)="toggleImplementationState(state)" class="rounded border-gray-300" />
+              <span [class]="getImplementationStateClass(state)">{{ state }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div *ngIf="map" class="matrix-container">
         <div class="matrix-scroll-content">
           <table class="matrix-table">
@@ -88,8 +100,9 @@ import { Map, Activity, Action, Actor } from '../models';
                       class="action-card cursor-pointer"
                       (click)="openEditActionModal(action)"
                     >
-                      <div class="flex items-center justify-between">
-                        <span class="font-medium">{{ action.name }}</span>
+                      <div class="flex items-center gap-2">
+                        <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full"></span>
+                        <span class="font-medium flex-1">{{ action.name }}</span>
                         <span class="ml-2 px-1.5 py-0.5 text-xs rounded bg-gray-100">
                           {{ action.actor_name || '-' }}
                         </span>
@@ -157,6 +170,14 @@ import { Map, Activity, Action, Actor } from '../models';
                 <option value="Nice">Nice</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Implementation State *</label>
+            <select formControlName="implementation_state" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
+              <option value="Full">Full</option>
+              <option value="Partial">Partial</option>
+              <option value="None">None</option>
+            </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">Description</label>
@@ -239,6 +260,14 @@ import { Map, Activity, Action, Actor } from '../models';
             </div>
           </div>
           <div>
+            <label class="block text-sm font-medium text-gray-700">Implementation State *</label>
+            <select formControlName="implementation_state" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
+              <option value="Full">Full</option>
+              <option value="Partial">Partial</option>
+              <option value="None">None</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700">Description</label>
             <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
           </div>
@@ -270,6 +299,8 @@ export class MapMatrixComponent implements OnInit {
   activities: Activity[] = [];
   actions: Action[] = [];
   priorities = ['Need', 'Want', 'Nice'];
+  implementationStates = ['Full', 'Partial', 'None'];
+  selectedImplementationStates: string[] = ['Full', 'Partial', 'None'];
   mapId: number | null = null;
 
   showAddActivityModal = false;
@@ -312,6 +343,7 @@ export class MapMatrixComponent implements OnInit {
       name: ['', Validators.required],
       actor_id: [null],
       priority: ['Need', Validators.required],
+      implementation_state: ['None', Validators.required],
       description: ['']
     });
     this.newActorForm = this.fb.group({
@@ -324,6 +356,7 @@ export class MapMatrixComponent implements OnInit {
       name: ['', Validators.required],
       actor_id: [null],
       priority: ['Need', Validators.required],
+      implementation_state: ['None', Validators.required],
       description: ['']
     });
 
@@ -361,7 +394,7 @@ export class MapMatrixComponent implements OnInit {
   loadActions(activities: Activity[]): void {
     this.actions = [];
     activities.forEach(activity => {
-      this.actionService.getAll(activity.id).subscribe({
+      this.actionService.getAll(activity.id, this.selectedImplementationStates).subscribe({
         next: (actions) => {
           this.actions = [...this.actions, ...actions];
         },
@@ -372,7 +405,7 @@ export class MapMatrixComponent implements OnInit {
 
   getActions(activityId: number, priority: string): Action[] {
     return this.actions.filter(
-      a => a.activity_id === activityId && a.priority === priority
+      a => a.activity_id === activityId && a.priority === priority && this.selectedImplementationStates.includes(a.implementation_state)
     );
   }
 
@@ -383,6 +416,34 @@ export class MapMatrixComponent implements OnInit {
       case 'Nice': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  }
+
+  getImplementationStateClass(state: string): string {
+    switch (state) {
+      case 'Full': return 'text-green-600';
+      case 'Partial': return 'text-yellow-600';
+      case 'None': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  }
+
+  getImplementationStateDot(state: string): string {
+    switch (state) {
+      case 'Full': return 'bg-green-500';
+      case 'Partial': return 'bg-yellow-500';
+      case 'None': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  }
+
+  toggleImplementationState(state: string): void {
+    const index = this.selectedImplementationStates.indexOf(state);
+    if (index > -1) {
+      this.selectedImplementationStates.splice(index, 1);
+    } else {
+      this.selectedImplementationStates.push(state);
+    }
+    this.loadActions(this.activities);
   }
 
   addActivityFromModal(): void {
@@ -418,18 +479,19 @@ export class MapMatrixComponent implements OnInit {
     if (!this.addActionToActivityId || this.actionForm.invalid) return;
     
     this.submittingAction = true;
-    const { name, actor_id, priority, description } = this.actionForm.value;
+    const { name, actor_id, priority, implementation_state, description } = this.actionForm.value;
     
     this.actionService.create({
       name,
       actor_id,
       priority,
+      implementation_state,
       description,
       activity_id: this.addActionToActivityId
     }).subscribe({
       next: () => {
         this.loadMap();
-        this.actionForm.reset({ actor_id: null, priority: 'Need' });
+        this.actionForm.reset({ actor_id: null, priority: 'Need', implementation_state: 'None' });
         this.showAddActionModal = false;
         this.addActionToActivityId = null;
         this.submittingAction = false;
@@ -509,6 +571,7 @@ export class MapMatrixComponent implements OnInit {
       name: action.name,
       actor_id: action.actor_id || null,
       priority: action.priority,
+      implementation_state: action.implementation_state,
       description: action.description || ''
     });
     this.showEditActionModal = true;
@@ -517,12 +580,13 @@ export class MapMatrixComponent implements OnInit {
   updateActionFromModal(): void {
     if (!this.editingActionId || this.editActionForm.invalid) return;
 
-    const { name, actor_id, priority, description } = this.editActionForm.value;
+    const { name, actor_id, priority, implementation_state, description } = this.editActionForm.value;
 
     this.actionService.update(this.editingActionId, {
       name,
       actor_id: actor_id || null,
       priority,
+      implementation_state,
       description
     }).subscribe({
       next: () => {

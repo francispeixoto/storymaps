@@ -243,12 +243,13 @@ Delete an activity. Cascades to delete associated actions.
 
 ### GET /actions
 
-Get all actions, optionally filtered by activity_id. Includes `actor_name` from join with actors table.
+Get all actions, optionally filtered by activity_id and/or implementation_state. Includes `actor_name` from join with actors table.
 
 **Query Parameters**:
 - `activity_id` (optional): Filter by activity
+- `implementation_state` (optional): Filter by implementation state (comma-separated values: Full,Partial,None)
 
-**Example**: `GET /actions?activity_id=1`
+**Example**: `GET /actions?activity_id=1&implementation_state=Full,Partial`
 
 **Response** (200):
 ```json
@@ -261,6 +262,7 @@ Get all actions, optionally filtered by activity_id. Includes `actor_name` from 
     "name": "Define map name",
     "actor_name": "PM",
     "priority": "Need",
+    "implementation_state": "Full",
     "description": "The user defines a unique name",
     "created_at": "2026-04-13T10:00:00.000Z",
     "updated_at": "2026-04-13T10:00:00.000Z"
@@ -280,6 +282,7 @@ Create a new action.
   "actor_id": 1,
   "name": "Define map name",
   "priority": "Need",
+  "implementation_state": "Full",
   "description": "The user defines a unique name"
 }
 ```
@@ -294,6 +297,7 @@ Create a new action.
   "name": "Define map name",
   "actor_name": "PM",
   "priority": "Need",
+  "implementation_state": "Full",
   "description": "The user defines a unique name",
   "created_at": "2026-04-13T10:00:00.000Z",
   "updated_at": "2026-04-13T10:00:00.000Z"
@@ -309,7 +313,8 @@ Update an action.
 {
   "actor_id": 2,
   "name": "Define map name (Updated)",
-  "priority": "Want"
+  "priority": "Want",
+  "implementation_state": "Partial"
 }
 ```
 
@@ -323,6 +328,7 @@ Update an action.
   "name": "Define map name (Updated)",
   "actor_name": "Developer",
   "priority": "Want",
+  "implementation_state": "Partial",
   "description": "The user defines a unique name",
   "created_at": "2026-04-13T10:00:00.000Z",
   "updated_at": "2026-04-13T11:00:00.000Z"

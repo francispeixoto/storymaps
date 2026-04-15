@@ -2,24 +2,29 @@ import { Request, Response } from 'express';
 import db from '../models/db';
 
 export const getAllActions = (req: Request, res: Response): void => {
-  const activityId = req.query.activity_id;
-  if (activityId) {
-    const actions = db.prepare(`
-      SELECT a.*, actors.name as actor_name
-      FROM actions a
-      LEFT JOIN actors ON a.actor_id = actors.id
-      WHERE a.activity_id = ?
-      ORDER BY a.id
-    `).all(activityId);
-    res.json(actions);
-    return;
-  }
-  const actions = db.prepare(`
+  const { activity_id, implementation_state } = req.query;
+  
+  let query = `
     SELECT a.*, actors.name as actor_name
     FROM actions a
     LEFT JOIN actors ON a.actor_id = actors.id
-    ORDER BY a.id
-  `).all();
+    WHERE 1=1
+  `;
+  const params: any[] = [];
+
+  if (activity_id) {
+    query += ' AND a.activity_id = ?';
+    params.push(activity_id);
+  }
+  if (implementation_state) {
+    const states = (implementation_state as string).split(',');
+    query += ` AND a.implementation_state IN (${states.map(() => '?').join(',')})`;
+    params.push(...states);
+  }
+
+  query += ' ORDER BY a.id';
+
+  const actions = db.prepare(query).all(...params);
   res.json(actions);
 };
 
@@ -33,9 +38,13 @@ export const getActionById = (req: Request, res: Response): void => {
 };
 
 export const createAction = (req: Request, res: Response): void => {
-  const { uid, activity_id, actor_id, name, priority, description } = req.body;
+  const { uid, activity_id, actor_id, name, priority, implementation_state, description } = req.body;
   if (!uid || !activity_id || !name || !priority) {
     res.status(400).json({ error: 'uid, activity_id, name, and priority are required' });
+    return;
+  }
+  if (!implementation_state || !['Full', 'Partial', 'None'].includes(implementation_state)) {
+    res.status(400).json({ error: 'implementation_state is required and must be Full, Partial, or None' });
     return;
   }
   const activityExists = db.prepare('SELECT id FROM activities WHERE id = ?').get(activity_id);
@@ -44,24 +53,28 @@ export const createAction = (req: Request, res: Response): void => {
     return;
   }
   const stmt = db.prepare(
-    'INSERT INTO actions (uid, activity_id, actor_id, name, priority, description) VALUES (?, ?, ?, ?, ?, ?)'
+    'INSERT INTO actions (uid, activity_id, actor_id, name, priority, implementation_state, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
   );
-  const result = stmt.run(uid, activity_id, actor_id || null, name, priority, description || null);
+  const result = stmt.run(uid, activity_id, actor_id || null, name, priority, implementation_state, description || null);
   const action = db.prepare('SELECT * FROM actions WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(action);
 };
 
 export const updateAction = (req: Request, res: Response): void => {
-  const { actor_id, name, priority, description } = req.body;
+  const { actor_id, name, priority, implementation_state, description } = req.body;
   const existing = db.prepare('SELECT * FROM actions WHERE id = ?').get(req.params.id);
   if (!existing) {
     res.status(404).json({ error: 'Action not found' });
     return;
   }
+  if (implementation_state && !['Full', 'Partial', 'None'].includes(implementation_state)) {
+    res.status(400).json({ error: 'implementation_state must be Full, Partial, or None' });
+    return;
+  }
   const stmt = db.prepare(
-    'UPDATE actions SET actor_id = ?, name = ?, priority = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    'UPDATE actions SET actor_id = ?, name = ?, priority = ?, implementation_state = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
   );
-  stmt.run(actor_id || null, name, priority, description, req.params.id);
+  stmt.run(actor_id || null, name, priority, implementation_state || 'None', description, req.params.id);
   const action = db.prepare('SELECT * FROM actions WHERE id = ?').get(req.params.id);
   res.json(action);
 };
