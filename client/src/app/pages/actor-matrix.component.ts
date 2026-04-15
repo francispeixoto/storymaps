@@ -12,32 +12,16 @@ import { Actor, ActorAction, Map } from '../models';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="max-w-full mx-auto">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <div class="flex items-center gap-4">
-            <h2 class="text-2xl font-bold">{{ actor?.name }}</h2>
-            <div *ngIf="actor?.action_count && (actor?.action_count || 0) > 0" [class]="getSatisfactionClass(actor?.satisfaction)" class="flex items-center gap-1">
-              <span class="text-xl font-bold">{{ actor?.satisfaction }}</span>
-              <span class="text-sm">({{ getSatisfactionCategory(actor?.satisfaction) }})</span>
-            </div>
+      <div class="mb-6">
+        <div class="flex items-center gap-4">
+          <h2 class="text-2xl font-bold">{{ actor?.name }}</h2>
+          <div *ngIf="actor?.action_count && (actor?.action_count || 0) > 0" [class]="getSatisfactionClass(actor?.satisfaction)" class="flex items-center gap-1">
+            <span class="text-xl font-bold">{{ actor?.satisfaction }}</span>
+            <span class="text-sm">({{ getSatisfactionCategory(actor?.satisfaction) }})</span>
           </div>
-          <p *ngIf="actor?.description" class="text-gray-600 mt-1">{{ actor?.description }}</p>
-          <p *ngIf="actor?.action_count" class="text-sm text-gray-500 mt-1">{{ actor?.action_count }} action{{ actor?.action_count !== 1 ? 's' : '' }}</p>
         </div>
-        <div class="flex gap-2">
-          <button
-            (click)="goToEdit()"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Edit
-          </button>
-          <button
-            (click)="goBack()"
-            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Back
-          </button>
-        </div>
+        <p *ngIf="actor?.description" class="text-gray-600 mt-1">{{ actor?.description }}</p>
+        <p *ngIf="actor?.action_count" class="text-sm text-gray-500 mt-1">{{ actor?.action_count }} action{{ actor?.action_count !== 1 ? 's' : '' }}</p>
       </div>
 
       <div *ngIf="maps.length > 0" class="mb-4">
@@ -82,8 +66,9 @@ import { Actor, ActorAction, Map } from '../models';
                     *ngFor="let action of getActions(activity, priority)"
                     class="p-2 rounded bg-gray-50 border border-gray-200 text-sm"
                   >
-                    <div class="flex items-center justify-between gap-2">
-                      <span class="font-medium">{{ action.name }}</span>
+                    <div class="flex items-center gap-2">
+                      <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
+                      <span class="font-medium flex-1">{{ action.name }}</span>
                       <span class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
                         {{ action.map_name }}
                       </span>
@@ -130,14 +115,11 @@ export class ActorMatrixComponent implements OnInit {
   loadActor(): void {
     if (!this.actorId) return;
     this.actorService.getById(this.actorId).subscribe({
-      next: (actor) => this.actor = actor,
-      error: (err) => console.error('Error loading actor:', err)
-    });
-this.actorService.getActions(this.actorId).subscribe({
-      next: (actions) => {
-        this.actions = actions;
+      next: (actor) => {
+        this.actor = actor;
+        this.loadActions();
       },
-      error: (err) => console.error('Error loading actions:', err)
+      error: (err) => console.error('Error loading actor:', err)
     });
   }
 
@@ -151,9 +133,14 @@ this.actorService.getActions(this.actorId).subscribe({
     });
   }
 
-  getMapIdByActivity(activityId: number, mapName: string): number {
-    const map = this.maps.find(m => m.name === mapName);
-    return map ? map.id : 0;
+  loadActions(): void {
+    if (!this.actorId) return;
+    this.actorService.getActions(this.actorId).subscribe({
+      next: (actions: ActorAction[]) => {
+        this.actions = actions;
+      },
+      error: (err: any) => console.error('Error loading actions:', err)
+    });
   }
 
   isMapSelected(mapId: number): boolean {
@@ -161,16 +148,17 @@ this.actorService.getActions(this.actorId).subscribe({
   }
 
   toggleMap(mapId: number): void {
-    if (this.isMapSelected(mapId)) {
-      this.selectedMapIds = this.selectedMapIds.filter(id => id !== mapId);
+    const index = this.selectedMapIds.indexOf(mapId);
+    if (index > -1) {
+      this.selectedMapIds.splice(index, 1);
     } else {
-      this.selectedMapIds = [...this.selectedMapIds, mapId];
+      this.selectedMapIds.push(mapId);
     }
   }
 
   get uniqueActivities(): string[] {
-    const filtered = this.filteredActions;
-    return [...new Set(filtered.map(a => a.activity_name))].sort();
+    const activities = new Set(this.filteredActions.map(a => a.activity_name));
+    return Array.from(activities).sort();
   }
 
   get filteredActions(): ActorAction[] {
@@ -195,18 +183,6 @@ this.actorService.getActions(this.actorId).subscribe({
     }
   }
 
-  goToEdit(): void {
-    if (this.actorId) {
-      this.router.navigate(['/actors', this.actorId, 'edit']);
-    }
-  }
-
-  goBack(): void {
-    if (this.actorId) {
-      this.router.navigate(['/actors', this.actorId]);
-    }
-  }
-
   getSatisfactionClass(score: number | undefined): string {
     if (score === undefined || score === 0) return 'text-gray-500';
     if (score >= 50) return 'text-green-600';
@@ -219,5 +195,14 @@ this.actorService.getActions(this.actorId).subscribe({
     if (score >= 50) return 'Promoter';
     if (score >= 0) return 'Passive';
     return 'Detractor';
+  }
+
+  getImplementationStateDot(state: string): string {
+    switch (state) {
+      case 'Full': return 'bg-green-500';
+      case 'Partial': return 'bg-yellow-500';
+      case 'None': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
   }
 }
