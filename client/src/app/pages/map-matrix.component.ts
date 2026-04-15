@@ -6,12 +6,13 @@ import { MapService } from '../services/map.service';
 import { ActivityService } from '../services/activity.service';
 import { ActionService } from '../services/action.service';
 import { ActorService } from '../services/actor.service';
+import { ConfirmDeleteDialogComponent } from '../components/confirm-delete-dialog.component';
 import { Map, Activity, Action, Actor } from '../models';
 
 @Component({
   selector: 'app-map-matrix',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ConfirmDeleteDialogComponent],
   template: `
     <div class="max-w-full mx-auto">
       <div class="flex justify-between items-center mb-6">
@@ -50,13 +51,25 @@ import { Map, Activity, Action, Actor } from '../models';
                 <th *ngFor="let activity of activities" class="matrix-header-col">
                   <div class="flex items-center justify-between">
                     <span>{{ activity.name }}</span>
-                    <button
-                      type="button"
-                      (click)="openAddActionModal(activity.id)"
-                      class="text-xs text-indigo-600 hover:text-indigo-800 ml-2"
-                    >
-                      + Add
-                    </button>
+                    <div class="flex items-center gap-1">
+                      <button
+                        type="button"
+                        (click)="openEditActivityModal(activity)"
+                        class="text-xs text-gray-400 hover:text-gray-600"
+                        title="Edit activity"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="openAddActionModal(activity.id)"
+                        class="text-xs text-indigo-600 hover:text-indigo-800 ml-1"
+                      >
+                        + Add
+                      </button>
+                    </div>
                   </div>
                 </th>
               </tr>
@@ -72,7 +85,8 @@ import { Map, Activity, Action, Actor } from '../models';
                   <div class="space-y-2 min-h-[60px]">
                     <div
                       *ngFor="let action of getActions(activity.id, priority)"
-                      class="action-card"
+                      class="action-card cursor-pointer"
+                      (click)="openEditActionModal(action)"
                     >
                       <div class="flex items-center justify-between">
                         <span class="font-medium">{{ action.name }}</span>
@@ -180,6 +194,91 @@ import { Map, Activity, Action, Actor } from '../models';
         </form>
       </div>
     </div>
+
+    <!-- Edit Activity Modal -->
+    <div *ngIf="showEditActivityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4">Edit Activity</h3>
+        <form [formGroup]="editActivityForm" (ngSubmit)="updateActivityFromModal()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Priority *</label>
+            <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
+              <option value="Need">Need</option>
+              <option value="Want">Want</option>
+              <option value="Nice">Nice</option>
+            </select>
+          </div>
+          <div class="flex justify-between items-center">
+            <button type="button" (click)="confirmDeleteActivity()" class="text-sm text-red-600 hover:text-red-800">
+              Delete Activity
+            </button>
+            <div class="flex gap-2">
+              <button type="button" (click)="showEditActivityModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+              <button type="submit" [disabled]="editActivityForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Action Modal -->
+    <div *ngIf="showEditActionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4">Edit Action</h3>
+        <form [formGroup]="editActionForm" (ngSubmit)="updateActionFromModal()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Action Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+          </div>
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700">Actor</label>
+              <div class="flex items-center gap-1">
+                <select formControlName="actor_id" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                  <option [ngValue]="null">Select actor...</option>
+                  <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
+                </select>
+                <button type="button" (click)="showNewActorModal = true" class="text-indigo-600 hover:text-indigo-800 text-xs">+ New</button>
+              </div>
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700">Priority *</label>
+              <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                <option value="Need">Need</option>
+                <option value="Want">Want</option>
+                <option value="Nice">Nice</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+          </div>
+          <div class="flex justify-between items-center">
+            <button type="button" (click)="confirmDeleteAction()" class="text-sm text-red-600 hover:text-red-800">
+              Delete Action
+            </button>
+            <div class="flex gap-2">
+              <button type="button" (click)="showEditActionModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+              <button type="submit" [disabled]="editActionForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <app-confirm-delete-dialog
+      *ngIf="showDeleteConfirm"
+      [itemName]="pendingDeleteItem?.name || ''"
+      [itemType]="pendingDeleteItem?.type || 'action'"
+      (confirmed)="onDeleteConfirmed()"
+      (cancelled)="onDeleteCancelled()"
+    ></app-confirm-delete-dialog>
   `
 })
 export class MapMatrixComponent implements OnInit {
@@ -192,11 +291,20 @@ export class MapMatrixComponent implements OnInit {
   showAddActivityModal = false;
   showAddActionModal = false;
   showNewActorModal = false;
+  showEditActivityModal = false;
+  showEditActionModal = false;
+  showDeleteConfirm = false;
   addActionToActivityId: number | null = null;
 
   activityForm!: FormGroup;
   actionForm!: FormGroup;
   newActorForm!: FormGroup;
+  editActivityForm!: FormGroup;
+  editActionForm!: FormGroup;
+
+  pendingDeleteItem: { id: number; name: string; type: 'activity' | 'action' } | null = null;
+  editingActivityId: number | null = null;
+  editingActionId: number | null = null;
 
   actors: Actor[] = [];
   submittingActivity = false;
@@ -225,6 +333,16 @@ export class MapMatrixComponent implements OnInit {
     });
     this.newActorForm = this.fb.group({
       name: ['', Validators.required]
+    });
+    this.editActivityForm = this.fb.group({
+      name: ['', Validators.required],
+      priority: ['Need', Validators.required]
+    });
+    this.editActionForm = this.fb.group({
+      name: ['', Validators.required],
+      actor_id: [null],
+      priority: ['Need', Validators.required],
+      description: ['']
     });
 
     this.route.params.subscribe(params => {
@@ -367,5 +485,117 @@ export class MapMatrixComponent implements OnInit {
     if (this.mapId) {
       this.router.navigate(['/maps', this.mapId, 'activities']);
     }
+  }
+
+  openEditActivityModal(activity: Activity): void {
+    this.editingActivityId = activity.id;
+    this.editActivityForm.patchValue({
+      name: activity.name,
+      priority: activity.priority
+    });
+    this.showEditActivityModal = true;
+  }
+
+  updateActivityFromModal(): void {
+    if (!this.editingActivityId || this.editActivityForm.invalid) return;
+
+    const { name, priority } = this.editActivityForm.value;
+
+    this.activityService.update(this.editingActivityId, { name, priority }).subscribe({
+      next: () => {
+        this.loadMap();
+        this.showEditActivityModal = false;
+        this.editingActivityId = null;
+      },
+      error: (err) => console.error('Error updating activity:', err)
+    });
+  }
+
+  confirmDeleteActivity(): void {
+    if (!this.editingActivityId) return;
+    const activity = this.activities.find(a => a.id === this.editingActivityId);
+    this.pendingDeleteItem = {
+      id: this.editingActivityId,
+      name: activity?.name || '',
+      type: 'activity'
+    };
+    this.showEditActivityModal = false;
+    this.showDeleteConfirm = true;
+  }
+
+  openEditActionModal(action: Action): void {
+    this.editingActionId = action.id;
+    this.editActionForm.patchValue({
+      name: action.name,
+      actor_id: action.actor_id || null,
+      priority: action.priority,
+      description: action.description || ''
+    });
+    this.showEditActionModal = true;
+  }
+
+  updateActionFromModal(): void {
+    if (!this.editingActionId || this.editActionForm.invalid) return;
+
+    const { name, actor_id, priority, description } = this.editActionForm.value;
+
+    this.actionService.update(this.editingActionId, {
+      name,
+      actor_id: actor_id || null,
+      priority,
+      description
+    }).subscribe({
+      next: () => {
+        this.loadMap();
+        this.showEditActionModal = false;
+        this.editingActionId = null;
+      },
+      error: (err) => console.error('Error updating action:', err)
+    });
+  }
+
+  confirmDeleteAction(): void {
+    if (!this.editingActionId) return;
+    const action = this.actions.find(a => a.id === this.editingActionId);
+    this.pendingDeleteItem = {
+      id: this.editingActionId,
+      name: action?.name || '',
+      type: 'action'
+    };
+    this.showEditActionModal = false;
+    this.showDeleteConfirm = true;
+  }
+
+  onDeleteConfirmed(): void {
+    if (!this.pendingDeleteItem) return;
+
+    if (this.pendingDeleteItem.type === 'activity') {
+      this.activityService.delete(this.pendingDeleteItem.id).subscribe({
+        next: () => {
+          this.loadMap();
+          this.closeDeleteDialog();
+        },
+        error: (err) => console.error('Error deleting activity:', err)
+      });
+    } else {
+      this.actionService.delete(this.pendingDeleteItem.id).subscribe({
+        next: () => {
+          this.loadMap();
+          this.closeDeleteDialog();
+        },
+        error: (err) => console.error('Error deleting action:', err)
+      });
+    }
+  }
+
+  closeDeleteDialog(): void {
+    this.showDeleteConfirm = false;
+    this.pendingDeleteItem = null;
+    this.editingActivityId = null;
+    this.editingActionId = null;
+  }
+
+  onDeleteCancelled(): void {
+    this.closeDeleteDialog();
   }
 }
