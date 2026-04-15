@@ -177,7 +177,6 @@ Get all activities, optionally filtered by map_id.
     "uid": "maps-001_act_001",
     "map_id": 1,
     "name": "Create new map",
-    "priority": "Need",
     "created_at": "2026-04-13T10:00:00.000Z",
     "updated_at": "2026-04-13T10:00:00.000Z"
   }
@@ -193,8 +192,7 @@ Create a new activity.
 {
   "uid": "maps-001_act_001",
   "map_id": 1,
-  "name": "Create new map",
-  "priority": "Need"
+  "name": "Create new map"
 }
 ```
 
@@ -205,7 +203,6 @@ Create a new activity.
   "uid": "maps-001_act_001",
   "map_id": 1,
   "name": "Create new map",
-  "priority": "Need",
   "created_at": "2026-04-13T10:00:00.000Z",
   "updated_at": "2026-04-13T10:00:00.000Z"
 }
@@ -218,8 +215,7 @@ Update an activity.
 **Request**:
 ```json
 {
-  "name": "Create new map (Updated)",
-  "priority": "Want"
+  "name": "Create new map (Updated)"
 }
 ```
 
@@ -230,7 +226,6 @@ Update an activity.
   "uid": "maps-001_act_001",
   "map_id": 1,
   "name": "Create new map (Updated)",
-  "priority": "Want",
   "created_at": "2026-04-13T10:00:00.000Z",
   "updated_at": "2026-04-13T11:00:00.000Z"
 }

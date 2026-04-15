@@ -121,14 +121,6 @@ import { Map, Activity, Action, Actor } from '../models';
             <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
             <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Priority *</label>
-            <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
-              <option value="Need">Need</option>
-              <option value="Want">Want</option>
-              <option value="Nice">Nice</option>
-            </select>
-          </div>
           <div class="flex justify-end gap-2">
             <button type="button" (click)="showAddActivityModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
             <button type="submit" [disabled]="activityForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
@@ -203,14 +195,6 @@ import { Map, Activity, Action, Actor } from '../models';
           <div>
             <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
             <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Priority *</label>
-            <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
-              <option value="Need">Need</option>
-              <option value="Want">Want</option>
-              <option value="Nice">Nice</option>
-            </select>
           </div>
           <div class="flex justify-between items-center">
             <button type="button" (click)="confirmDeleteActivity()" class="text-sm text-red-600 hover:text-red-800">
@@ -322,8 +306,7 @@ export class MapMatrixComponent implements OnInit {
 
   ngOnInit(): void {
     this.activityForm = this.fb.group({
-      name: ['', Validators.required],
-      priority: ['Need', Validators.required]
+      name: ['', Validators.required]
     });
     this.actionForm = this.fb.group({
       name: ['', Validators.required],
@@ -335,8 +318,7 @@ export class MapMatrixComponent implements OnInit {
       name: ['', Validators.required]
     });
     this.editActivityForm = this.fb.group({
-      name: ['', Validators.required],
-      priority: ['Need', Validators.required]
+      name: ['', Validators.required]
     });
     this.editActionForm = this.fb.group({
       name: ['', Validators.required],
@@ -407,16 +389,15 @@ export class MapMatrixComponent implements OnInit {
     if (!this.mapId || this.activityForm.invalid) return;
     
     this.submittingActivity = true;
-    const { name, priority } = this.activityForm.value;
+    const { name } = this.activityForm.value;
     
     this.activityService.create({
       name,
-      priority,
       map_id: this.mapId
     }).subscribe({
       next: () => {
         this.loadMap();
-        this.activityForm.reset({ priority: 'Need' });
+        this.activityForm.reset();
         this.showAddActivityModal = false;
         this.submittingActivity = false;
       },
@@ -490,8 +471,7 @@ export class MapMatrixComponent implements OnInit {
   openEditActivityModal(activity: Activity): void {
     this.editingActivityId = activity.id;
     this.editActivityForm.patchValue({
-      name: activity.name,
-      priority: activity.priority
+      name: activity.name
     });
     this.showEditActivityModal = true;
   }
@@ -499,9 +479,9 @@ export class MapMatrixComponent implements OnInit {
   updateActivityFromModal(): void {
     if (!this.editingActivityId || this.editActivityForm.invalid) return;
 
-    const { name, priority } = this.editActivityForm.value;
+    const { name } = this.editActivityForm.value;
 
-    this.activityService.update(this.editingActivityId, { name, priority }).subscribe({
+    this.activityService.update(this.editingActivityId, { name }).subscribe({
       next: () => {
         this.loadMap();
         this.showEditActivityModal = false;
