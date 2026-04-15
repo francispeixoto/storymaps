@@ -33,6 +33,7 @@ export interface Action {
   actor_name?: string;
   name: string;
   priority: 'Need' | 'Want' | 'Nice';
+  implementation_state: 'Full' | 'Partial' | 'None';
   description?: string;
   created_at: string;
   updated_at: string;
@@ -53,6 +54,7 @@ export interface ActorAction {
   actor_id?: number;
   name: string;
   priority: 'Need' | 'Want' | 'Nice';
+  implementation_state: 'Full' | 'Partial' | 'None';
   description?: string;
   created_at: string;
   updated_at: string;

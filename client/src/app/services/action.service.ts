@@ -12,8 +12,14 @@ export class ActionService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(activityId?: number): Observable<Action[]> {
-    const url = activityId ? `${this.apiUrl}?activity_id=${activityId}` : this.apiUrl;
+  getAll(activityId?: number, implementationState?: string[]): Observable<Action[]> {
+    let url = this.apiUrl;
+    const params: string[] = [];
+    if (activityId) params.push(`activity_id=${activityId}`);
+    if (implementationState && implementationState.length > 0) {
+      params.push(`implementation_state=${implementationState.join(',')}`);
+    }
+    if (params.length > 0) url += '?' + params.join('&');
     return this.http.get<Action[]>(url);
   }
 
