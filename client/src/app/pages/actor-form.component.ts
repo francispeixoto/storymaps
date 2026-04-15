@@ -4,24 +4,18 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActorService } from '../services/actor.service';
 import { Actor } from '../models';
+import { ActorMatrixComponent } from './actor-matrix.component';
 
 @Component({
   selector: 'app-actor-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ActorMatrixComponent],
   template: `
-    <div class="max-w-4xl mx-auto">
+    <!-- View Mode - Full Width -->
+    <div *ngIf="mode === 'view'" class="max-w-full mx-auto">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">
-          {{ mode === 'create' ? 'Create New Actor' : mode === 'edit' ? 'Edit Actor' : 'Actor Details' }}
-        </h2>
-        <div class="flex gap-2" *ngIf="mode === 'view'">
-          <button
-            (click)="goToMatrix()"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-          >
-            Matrix
-          </button>
+        <h2 class="text-2xl font-bold">Actor Details</h2>
+        <div class="flex gap-2">
           <button
             (click)="goToEdit()"
             class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -36,17 +30,18 @@ import { Actor } from '../models';
           </button>
         </div>
       </div>
+      <app-actor-matrix></app-actor-matrix>
+    </div>
 
-      <!-- View Mode -->
-      <div *ngIf="mode === 'view' && actor" class="bg-white rounded-lg shadow p-6 border border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">{{ actor.name }}</h3>
-        <p *ngIf="actor.description" class="mt-2 text-gray-600">{{ actor.description }}</p>
-        <p class="mt-4 text-sm text-gray-500">UID: {{ actor.uid }}</p>
-        <p class="text-sm text-gray-500">Created: {{ actor.created_at | date:'medium' }}</p>
+    <!-- Form Mode (Create/Edit) - Narrow Width -->
+    <div *ngIf="mode !== 'view'" class="max-w-4xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">
+          {{ mode === 'create' ? 'Create New Actor' : 'Edit Actor' }}
+        </h2>
       </div>
 
-      <!-- Form Mode (Create/Edit) -->
-      <form *ngIf="mode !== 'view'" [formGroup]="actorForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <form [formGroup]="actorForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Actor Details</h3>
           <div>
@@ -185,12 +180,6 @@ export class ActorFormComponent implements OnInit {
   goToEdit(): void {
     if (this.actorId) {
       this.router.navigate(['/actors', this.actorId, 'edit']);
-    }
-  }
-
-  goToMatrix(): void {
-    if (this.actorId) {
-      this.router.navigate(['/actors', this.actorId, 'matrix']);
     }
   }
 
