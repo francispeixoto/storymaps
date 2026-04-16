@@ -63,7 +63,7 @@ interface DropdownOption {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          <div *ngIf="actorDropdownOpen" class="absolute z-10 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg">
+          <div *ngIf="actorDropdownOpen" class="absolute z-50 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg">
             <div class="p-2 border-b border-gray-100">
               <input
                 type="text"
@@ -100,7 +100,7 @@ interface DropdownOption {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          <div *ngIf="mapDropdownOpen" class="absolute z-10 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg">
+          <div *ngIf="mapDropdownOpen" class="absolute z-50 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg">
             <div class="p-2 border-b border-gray-100">
               <input
                 type="text"
@@ -137,7 +137,7 @@ interface DropdownOption {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          <div *ngIf="stateDropdownOpen" class="absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg p-2">
+          <div *ngIf="stateDropdownOpen" class="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg p-2">
             <label *ngFor="let state of stateOptions" class="flex items-center gap-2 py-1 text-sm cursor-pointer hover:bg-gray-50">
               <input
                 type="checkbox"
