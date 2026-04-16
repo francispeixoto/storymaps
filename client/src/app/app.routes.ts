@@ -12,7 +12,5 @@ export const routes: Routes = [
   { path: 'actors/:id', component: MatrixComponent },
   { path: 'actors/:id/edit', component: ActorFormComponent, data: { mode: 'edit' } },
   { path: 'maps/create', component: MapFormComponent, data: { mode: 'create' } },
-  { path: 'maps/:id', component: MatrixComponent },
-  { path: 'maps/:id/edit', component: MapFormComponent, data: { mode: 'edit' } },
-  { path: 'maps/:id/activities', component: MapFormComponent, data: { mode: 'view' } }
+  { path: 'maps/:id', component: MatrixComponent }
 ];

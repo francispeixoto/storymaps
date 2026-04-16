@@ -6,6 +6,7 @@ import { MapService } from '../services/map.service';
 import { ActorService } from '../services/actor.service';
 import { ActionService } from '../services/action.service';
 import { ActivityService } from '../services/activity.service';
+import { ToastService } from '../services/toast.service';
 import { ConfirmDeleteDialogComponent } from '../components/confirm-delete-dialog.component';
 import { Map, Actor, Activity, Action, ActionDependency, ActionWithContext } from '../models';
 
@@ -38,7 +39,7 @@ interface DropdownOption {
           </button>
           <button
             *ngIf="viewMode === 'map' && currentMap"
-            (click)="goToEdit()"
+            (click)="openMapEditModal()"
             class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Edit
@@ -475,6 +476,32 @@ interface DropdownOption {
       (confirmed)="onDeleteConfirmed()"
       (cancelled)="onDeleteCancelled()"
     ></app-confirm-delete-dialog>
+
+    <!-- Edit Map Modal -->
+    <div *ngIf="showMapEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4">Edit Map</h3>
+        <form [formGroup]="editMapForm" (ngSubmit)="updateMapFromModal()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Map Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+          </div>
+          <div class="flex justify-between items-center">
+            <button type="button" (click)="confirmDeleteMap()" class="text-sm text-red-600 hover:text-red-800">
+              Delete Map
+            </button>
+            <div class="flex gap-2">
+              <button type="button" (click)="showMapEditModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+              <button type="submit" [disabled]="editMapForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
   `
 })
 export class MatrixComponent implements OnInit {
@@ -508,6 +535,7 @@ export class MatrixComponent implements OnInit {
   showNewActorModal = false;
   showActionModal = false;
   showEditActivityModal = false;
+  showMapEditModal = false;
   showDeleteConfirm = false;
   addActionToActivityId: number | null = null;
   
@@ -516,8 +544,9 @@ export class MatrixComponent implements OnInit {
   newActorForm!: FormGroup;
   editActionForm!: FormGroup;
   editActivityForm!: FormGroup;
+  editMapForm!: FormGroup;
   
-  pendingDeleteItem: { id: number; name: string; type: 'action' | 'activity' } | null = null;
+  pendingDeleteItem: { id: number; name: string; type: 'action' | 'activity' | 'map' } | null = null;
   editingActionId: number | null = null;
   editingActivityId: number | null = null;
   selectedAction: ActionWithContext | null = null;
@@ -533,6 +562,7 @@ export class MatrixComponent implements OnInit {
     private actorService: ActorService,
     private actionService: ActionService,
     private activityService: ActivityService,
+    private toastService: ToastService,
     private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute
@@ -568,6 +598,10 @@ export class MatrixComponent implements OnInit {
       description: ['']
     });
     this.editActivityForm = this.fb.group({
+      name: ['', Validators.required],
+      description: ['']
+    });
+    this.editMapForm = this.fb.group({
       name: ['', Validators.required],
       description: ['']
     });
@@ -895,10 +929,43 @@ export class MatrixComponent implements OnInit {
     }
   }
 
-  goToEdit(): void {
-    if (this.mapId) {
-      this.router.navigate(['/maps', this.mapId, 'edit']);
+  openMapEditModal(): void {
+    if (this.currentMap) {
+      this.editMapForm.patchValue({
+        name: this.currentMap.name,
+        description: this.currentMap.description || ''
+      });
+      this.showMapEditModal = true;
     }
+  }
+
+  updateMapFromModal(): void {
+    if (!this.currentMap || this.editMapForm.invalid) return;
+
+    const { name, description } = this.editMapForm.value;
+
+    this.mapService.update(this.currentMap.id, { name, description }).subscribe({
+      next: () => {
+        this.toastService.showSuccess('Map updated successfully');
+        this.showMapEditModal = false;
+        this.loadMapData();
+      },
+      error: (err) => {
+        console.error('Error updating map:', err);
+        this.toastService.showError('Failed to update map');
+      }
+    });
+  }
+
+  confirmDeleteMap(): void {
+    if (!this.currentMap) return;
+    this.pendingDeleteItem = {
+      id: this.currentMap.id,
+      name: this.currentMap.name,
+      type: 'map'
+    };
+    this.showMapEditModal = false;
+    this.showDeleteConfirm = true;
   }
 
   goBack(): void {
@@ -969,8 +1036,12 @@ export class MatrixComponent implements OnInit {
         this.loadActions();
         this.activityForm.reset();
         this.showAddActivityModal = false;
+        this.toastService.showSuccess('Activity added successfully');
       },
-      error: (err) => console.error('Error adding activity:', err)
+      error: (err) => {
+        console.error('Error adding activity:', err);
+        this.toastService.showError('Failed to add activity');
+      }
     });
   }
 
@@ -993,8 +1064,12 @@ export class MatrixComponent implements OnInit {
         this.loadActions();
         this.showEditActivityModal = false;
         this.editingActivityId = null;
+        this.toastService.showSuccess('Activity updated successfully');
       },
-      error: (err) => console.error('Error updating activity:', err)
+      error: (err) => {
+        console.error('Error updating activity:', err);
+        this.toastService.showError('Failed to update activity');
+      }
     });
   }
 
@@ -1028,9 +1103,11 @@ export class MatrixComponent implements OnInit {
         this.actionForm.reset({ actor_id: null, priority: 'Need', implementation_state: 'None' });
         this.showAddActionModal = false;
         this.addActionToActivityId = null;
+        this.toastService.showSuccess('Action added successfully');
       },
       error: (err) => {
         console.error('Error adding action:', err);
+        this.toastService.showError('Failed to add action');
       }
     });
   }
@@ -1055,8 +1132,12 @@ export class MatrixComponent implements OnInit {
         });
         this.newActorForm.reset({ name: '' });
         this.showNewActorModal = false;
+        this.toastService.showSuccess('Actor added successfully');
       },
-      error: (err) => console.error('Error adding actor:', err)
+      error: (err) => {
+        console.error('Error adding actor:', err);
+        this.toastService.showError('Failed to add actor');
+      }
     });
   }
 
@@ -1076,8 +1157,12 @@ export class MatrixComponent implements OnInit {
         this.loadActions();
         this.showActionModal = false;
         this.editingActionId = null;
+        this.toastService.showSuccess('Action updated successfully');
       },
-      error: (err) => console.error('Error updating action:', err)
+      error: (err) => {
+        console.error('Error updating action:', err);
+        this.toastService.showError('Failed to update action');
+      }
     });
   }
 
@@ -1101,16 +1186,39 @@ export class MatrixComponent implements OnInit {
         next: () => {
           this.loadActions();
           this.closeDeleteDialog();
+          this.toastService.showSuccess('Activity deleted successfully');
         },
-        error: (err) => console.error('Error deleting activity:', err)
+        error: (err) => {
+          console.error('Error deleting activity:', err);
+          this.toastService.showError('Failed to delete activity');
+          this.closeDeleteDialog();
+        }
+      });
+    } else if (this.pendingDeleteItem.type === 'map') {
+      this.mapService.delete(this.pendingDeleteItem.id).subscribe({
+        next: () => {
+          this.closeDeleteDialog();
+          this.toastService.showSuccess('Map deleted successfully');
+          this.router.navigate(['/']);
+        },
+        error: (err) => {
+          console.error('Error deleting map:', err);
+          this.toastService.showError('Failed to delete map');
+          this.closeDeleteDialog();
+        }
       });
     } else {
       this.actionService.delete(this.pendingDeleteItem.id).subscribe({
         next: () => {
           this.loadActions();
           this.closeDeleteDialog();
+          this.toastService.showSuccess('Action deleted successfully');
         },
-        error: (err) => console.error('Error deleting action:', err)
+        error: (err) => {
+          console.error('Error deleting action:', err);
+          this.toastService.showError('Failed to delete action');
+          this.closeDeleteDialog();
+        }
       });
     }
   }

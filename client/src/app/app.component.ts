@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
+import { ToastComponent } from './components/toast.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, ToastComponent],
   template: `
     <div class="min-h-screen bg-gray-50">
       <header class="bg-white shadow">
@@ -17,6 +18,7 @@ import { RouterOutlet, RouterLink } from '@angular/router';
       <main class="max-w-7xl mx-auto py-6 px-4">
         <router-outlet></router-outlet>
       </main>
+      <app-toast></app-toast>
     </div>
   `
 })

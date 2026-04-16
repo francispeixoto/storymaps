@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActorService } from '../services/actor.service';
+import { ToastService } from '../services/toast.service';
 import { Actor } from '../models';
 
 @Component({
@@ -79,6 +80,7 @@ export class ActorFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private actorService: ActorService,
+    private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -132,22 +134,26 @@ export class ActorFormComponent implements OnInit {
     if (this.mode === 'edit' && this.actorId) {
       this.actorService.update(this.actorId, formValue).subscribe({
         next: () => {
+          this.toastService.showSuccess('Actor updated successfully');
           this.router.navigate(['/actors']);
         },
         error: (err) => {
           console.error('Error updating actor:', err);
           this.error = 'Failed to update actor. Please try again.';
+          this.toastService.showError('Failed to update actor');
           this.submitting = false;
         }
       });
     } else {
       this.actorService.create(formValue).subscribe({
         next: () => {
+          this.toastService.showSuccess('Actor created successfully');
           this.router.navigate(['/actors']);
         },
         error: (err) => {
           console.error('Error creating actor:', err);
           this.error = 'Failed to create actor. Please try again.';
+          this.toastService.showError('Failed to create actor');
           this.submitting = false;
         }
       });
