@@ -736,7 +736,7 @@ export class MatrixComponent implements OnInit {
   }
 
   get showActorBadges(): boolean {
-    return this.viewMode === 'map' && this.selectedActorIds.length > 1;
+    return this.viewMode === 'map';
   }
 
   get showMapBadges(): boolean {
