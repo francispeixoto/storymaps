@@ -134,7 +134,7 @@ export class ActorFormComponent implements OnInit {
     if (this.mode === 'edit' && this.actorId) {
       this.actorService.update(this.actorId, formValue).subscribe({
         next: () => {
-          this.toastService.showSuccess('Actor updated successfully');
+          this.toastService.showSuccess(`Actor '${formValue.name}' updated successfully`);
           this.router.navigate(['/actors']);
         },
         error: (err) => {
@@ -147,7 +147,7 @@ export class ActorFormComponent implements OnInit {
     } else {
       this.actorService.create(formValue).subscribe({
         next: () => {
-          this.toastService.showSuccess('Actor created successfully');
+          this.toastService.showSuccess(`Actor '${formValue.name}' created successfully`);
           this.router.navigate(['/actors']);
         },
         error: (err) => {

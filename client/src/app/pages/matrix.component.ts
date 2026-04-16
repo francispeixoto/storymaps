@@ -946,7 +946,7 @@ export class MatrixComponent implements OnInit {
 
     this.mapService.update(this.currentMap.id, { name, description }).subscribe({
       next: () => {
-        this.toastService.showSuccess('Map updated successfully');
+        this.toastService.showSuccess(`Map '${name}' updated successfully`);
         this.showMapEditModal = false;
         this.loadMapData();
       },
@@ -1036,7 +1036,7 @@ export class MatrixComponent implements OnInit {
         this.loadActions();
         this.activityForm.reset();
         this.showAddActivityModal = false;
-        this.toastService.showSuccess('Activity added successfully');
+        this.toastService.showSuccess(`Activity '${name}' added successfully`);
       },
       error: (err) => {
         console.error('Error adding activity:', err);
@@ -1064,7 +1064,7 @@ export class MatrixComponent implements OnInit {
         this.loadActions();
         this.showEditActivityModal = false;
         this.editingActivityId = null;
-        this.toastService.showSuccess('Activity updated successfully');
+        this.toastService.showSuccess(`Activity '${name}' updated successfully`);
       },
       error: (err) => {
         console.error('Error updating activity:', err);
@@ -1103,7 +1103,7 @@ export class MatrixComponent implements OnInit {
         this.actionForm.reset({ actor_id: null, priority: 'Need', implementation_state: 'None' });
         this.showAddActionModal = false;
         this.addActionToActivityId = null;
-        this.toastService.showSuccess('Action added successfully');
+        this.toastService.showSuccess(`Action '${name}' added successfully`);
       },
       error: (err) => {
         console.error('Error adding action:', err);
@@ -1132,7 +1132,7 @@ export class MatrixComponent implements OnInit {
         });
         this.newActorForm.reset({ name: '' });
         this.showNewActorModal = false;
-        this.toastService.showSuccess('Actor added successfully');
+        this.toastService.showSuccess(`Actor '${name}' added successfully`);
       },
       error: (err) => {
         console.error('Error adding actor:', err);
@@ -1157,7 +1157,7 @@ export class MatrixComponent implements OnInit {
         this.loadActions();
         this.showActionModal = false;
         this.editingActionId = null;
-        this.toastService.showSuccess('Action updated successfully');
+        this.toastService.showSuccess(`Action '${name}' updated successfully`);
       },
       error: (err) => {
         console.error('Error updating action:', err);
@@ -1181,12 +1181,14 @@ export class MatrixComponent implements OnInit {
   onDeleteConfirmed(): void {
     if (!this.pendingDeleteItem) return;
 
+    const itemName = this.pendingDeleteItem.name;
+
     if (this.pendingDeleteItem.type === 'activity') {
       this.activityService.delete(this.pendingDeleteItem.id).subscribe({
         next: () => {
           this.loadActions();
           this.closeDeleteDialog();
-          this.toastService.showSuccess('Activity deleted successfully');
+          this.toastService.showSuccess(`Activity '${itemName}' deleted successfully`);
         },
         error: (err) => {
           console.error('Error deleting activity:', err);
@@ -1198,7 +1200,7 @@ export class MatrixComponent implements OnInit {
       this.mapService.delete(this.pendingDeleteItem.id).subscribe({
         next: () => {
           this.closeDeleteDialog();
-          this.toastService.showSuccess('Map deleted successfully');
+          this.toastService.showSuccess(`Map '${itemName}' deleted successfully`);
           this.router.navigate(['/']);
         },
         error: (err) => {
@@ -1212,7 +1214,7 @@ export class MatrixComponent implements OnInit {
         next: () => {
           this.loadActions();
           this.closeDeleteDialog();
-          this.toastService.showSuccess('Action deleted successfully');
+          this.toastService.showSuccess(`Action '${itemName}' deleted successfully`);
         },
         error: (err) => {
           console.error('Error deleting action:', err);

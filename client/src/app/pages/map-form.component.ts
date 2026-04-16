@@ -566,7 +566,7 @@ export class MapFormComponent implements OnInit {
     if (this.mode === 'edit' && this.mapId) {
       this.mapService.update(this.mapId, formValue).subscribe({
         next: () => {
-          this.toastService.showSuccess('Map updated successfully');
+          this.toastService.showSuccess(`Map '${formValue.name}' updated successfully`);
           this.router.navigate(['/']);
         },
         error: (err) => {
@@ -579,7 +579,7 @@ export class MapFormComponent implements OnInit {
     } else {
       this.mapService.create(formValue).subscribe({
         next: () => {
-          this.toastService.showSuccess('Map created successfully');
+          this.toastService.showSuccess(`Map '${formValue.name}' created successfully`);
           this.router.navigate(['/']);
         },
         error: (err) => {
