@@ -38,6 +38,7 @@ export function initDatabase(): void {
       uid TEXT UNIQUE NOT NULL,
       map_id INTEGER NOT NULL,
       name TEXT NOT NULL,
+      description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
@@ -104,6 +105,10 @@ export function initDatabase(): void {
     const hasPriorityCol = activityCols.some((col: any) => col.name === 'priority');
     if (hasPriorityCol) {
       db.exec('ALTER TABLE activities DROP COLUMN priority');
+    }
+    const hasDescriptionCol = activityCols.some((col: any) => col.name === 'description');
+    if (!hasDescriptionCol) {
+      db.exec('ALTER TABLE activities ADD COLUMN description TEXT');
     }
   } catch (e) {
     // Ignore migration errors

@@ -167,7 +167,12 @@ interface DropdownOption {
                 <th class="matrix-corner"></th>
                 <th *ngFor="let activity of uniqueActivities" class="matrix-header-col">
                   <div class="flex items-center justify-between">
-                    <span>{{ activity.name }}</span>
+                    <div>
+                      <span>{{ activity.name }}</span>
+                      <p *ngIf="activity.description" class="text-xs text-gray-500 truncate max-w-[150px]" [title]="activity.description">
+                        {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
+                      </p>
+                    </div>
                     <div class="flex items-center gap-1">
                       <button
                         *ngIf="viewMode === 'map'"
@@ -258,6 +263,10 @@ interface DropdownOption {
           <div>
             <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
             <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
           </div>
           <div class="flex justify-between items-center">
             <button type="button" (click)="confirmDeleteActivity()" class="text-sm text-red-600 hover:text-red-800">
@@ -475,7 +484,7 @@ export class MatrixComponent implements OnInit {
   
   actors: Actor[] = [];
   maps: Map[] = [];
-  activities: { id: number; name: string; map_id: number }[] = [];
+  activities: { id: number; name: string; description?: string; map_id: number }[] = [];
   actions: ActionWithContext[] = [];
   
   priorities = ['Need', 'Want', 'Nice'];
@@ -559,7 +568,8 @@ export class MatrixComponent implements OnInit {
       description: ['']
     });
     this.editActivityForm = this.fb.group({
-      name: ['', Validators.required]
+      name: ['', Validators.required],
+      description: ['']
     });
   }
 
@@ -757,14 +767,17 @@ export class MatrixComponent implements OnInit {
     });
   }
 
-  get uniqueActivities(): { id: number; name: string }[] {
-    const activityMap = new Map<number, { id: number; name: string }>();
+  get uniqueActivities(): { id: number; name: string; description?: string }[] {
+    const activityMap = new Map<number, { id: number; name: string; description?: string }>();
     for (const action of this.filteredActions) {
       if (action.activity_id && action.activity_name) {
-        activityMap.set(action.activity_id, {
-          id: action.activity_id,
-          name: action.activity_name
-        });
+        if (!activityMap.has(action.activity_id)) {
+          activityMap.set(action.activity_id, {
+            id: action.activity_id,
+            name: action.activity_name,
+            description: action.activity_description
+          });
+        }
       }
     }
     return Array.from(activityMap.values());
@@ -961,10 +974,11 @@ export class MatrixComponent implements OnInit {
     });
   }
 
-  openEditActivityModal(activity: { id: number; name: string }): void {
+  openEditActivityModal(activity: { id: number; name: string; description?: string }): void {
     this.editingActivityId = activity.id;
     this.editActivityForm.patchValue({
-      name: activity.name
+      name: activity.name,
+      description: activity.description || ''
     });
     this.showEditActivityModal = true;
   }
@@ -972,9 +986,9 @@ export class MatrixComponent implements OnInit {
   updateActivityFromModal(): void {
     if (!this.editingActivityId || this.editActivityForm.invalid) return;
 
-    const { name } = this.editActivityForm.value;
+    const { name, description } = this.editActivityForm.value;
 
-    this.activityService.update(this.editingActivityId, { name }).subscribe({
+    this.activityService.update(this.editingActivityId, { name, description }).subscribe({
       next: () => {
         this.loadActions();
         this.showEditActivityModal = false;

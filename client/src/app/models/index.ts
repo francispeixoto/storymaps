@@ -23,6 +23,7 @@ export interface Activity {
   uid: string;
   map_id: number;
   name: string;
+  description?: string;
   created_at: string;
   updated_at: string;
 }
@@ -79,6 +80,7 @@ export interface ActionWithContext {
   updated_at: string;
   activity_uid?: string;
   activity_name?: string;
+  activity_description?: string;
   map_id?: number;
   map_uid?: string;
   map_name?: string;
