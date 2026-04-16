@@ -102,30 +102,72 @@ export const getActionDependencies = (req: Request, res: Response): void => {
 
 export const addActionDependency = (req: Request, res: Response): void => {
   const { depends_on_action_id } = req.body;
+  const actionId = Number(req.params.id);
+  
   if (!depends_on_action_id) {
     res.status(400).json({ error: 'depends_on_action_id is required' });
     return;
   }
-  const actionExists = db.prepare('SELECT id FROM actions WHERE id = ?').get(req.params.id);
+  
+  const targetId = Number(depends_on_action_id);
+  const actionExists = db.prepare('SELECT id FROM actions WHERE id = ?').get(actionId);
   if (!actionExists) {
     res.status(400).json({ error: 'Action not found' });
     return;
   }
-  const depExists = db.prepare('SELECT id FROM actions WHERE id = ?').get(depends_on_action_id);
+  const depExists = db.prepare('SELECT id FROM actions WHERE id = ?').get(targetId);
   if (!depExists) {
     res.status(400).json({ error: 'Dependency action not found' });
     return;
   }
-  try {
-    const stmt = db.prepare(
-      'INSERT INTO action_dependencies (action_id, depends_on_action_id) VALUES (?, ?)'
-    );
-    stmt.run(req.params.id, depends_on_action_id);
-    res.status(201).json({ action_id: req.params.id, depends_on_action_id });
-  } catch {
+
+  const existing = db.prepare(
+    'SELECT id FROM action_dependencies WHERE action_id = ? AND depends_on_action_id = ?'
+  ).get(actionId, targetId);
+  if (existing) {
     res.status(400).json({ error: 'Dependency already exists' });
+    return;
   }
+
+  const hasCircular = checkCircularDependency(actionId, targetId);
+  if (hasCircular) {
+    res.status(400).json({ error: 'Cannot add dependency: would create circular dependency' });
+    return;
+  }
+
+  const directReverse = db.prepare(
+    'SELECT id FROM action_dependencies WHERE action_id = ? AND depends_on_action_id = ?'
+  ).get(targetId, actionId);
+  if (directReverse) {
+    res.status(400).json({ error: 'Cannot add dependency: would create circular dependency' });
+    return;
+  }
+
+  const stmt = db.prepare(
+    'INSERT INTO action_dependencies (action_id, depends_on_action_id) VALUES (?, ?)'
+  );
+  stmt.run(actionId, targetId);
+  res.status(201).json({ action_id: actionId, depends_on_action_id: targetId });
 };
+
+function checkCircularDependency(actionId: number, targetId: number, visited: Set<number> = new Set()): boolean {
+  if (targetId === actionId) return true;
+  if (visited.has(targetId)) return false;
+  
+  visited.add(targetId);
+  
+  const dependencies = db.prepare(
+    'SELECT depends_on_action_id FROM action_dependencies WHERE action_id = ?'
+  ).all(targetId) as { depends_on_action_id: number }[];
+  
+  for (const dep of dependencies) {
+    if (checkCircularDependency(actionId, dep.depends_on_action_id, visited)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 export const removeActionDependency = (req: Request, res: Response): void => {
   const { dependsOnId } = req.params;
@@ -138,4 +180,52 @@ export const removeActionDependency = (req: Request, res: Response): void => {
   }
   db.prepare('DELETE FROM action_dependencies WHERE action_id = ? AND depends_on_action_id = ?').run(req.params.id, dependsOnId);
   res.status(204).send();
+};
+
+export const getPrerequisitesOf = (req: Request, res: Response): void => {
+  const actionId = Number(req.params.id);
+  
+  const actionExists = db.prepare('SELECT id FROM actions WHERE id = ?').get(actionId);
+  if (!actionExists) {
+    res.status(404).json({ error: 'Action not found' });
+    return;
+  }
+
+  const prerequisites = db.prepare(`
+    SELECT ad.*, 
+           a.uid as action_uid,
+           a.name as action_name,
+           a.priority as action_priority,
+           act.uid as activity_uid,
+           act.name as activity_name,
+           m.uid as map_uid,
+           m.name as map_name
+    FROM action_dependencies ad
+    JOIN actions a ON ad.action_id = a.id
+    LEFT JOIN activities act ON a.activity_id = act.id
+    LEFT JOIN maps m ON act.map_id = m.id
+    WHERE ad.depends_on_action_id = ?
+    ORDER BY m.name, act.name, a.name
+  `).all(actionId);
+  
+  res.json(prerequisites);
+};
+
+export const getAllActionsWithContext = (_req: Request, res: Response): void => {
+  const actions = db.prepare(`
+    SELECT 
+      a.*,
+      act.uid as activity_uid,
+      act.name as activity_name,
+      m.uid as map_uid,
+      m.name as map_name,
+      actors.name as actor_name
+    FROM actions a
+    LEFT JOIN activities act ON a.activity_id = act.id
+    LEFT JOIN maps m ON act.map_id = m.id
+    LEFT JOIN actors ON a.actor_id = actors.id
+    ORDER BY m.name, act.name, a.name
+  `).all();
+  
+  res.json(actions);
 };

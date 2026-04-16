@@ -65,3 +65,24 @@ export interface ActorAction {
   map_uid: string;
   map_name: string;
 }
+
+export interface ActionWithContext {
+  id: number;
+  uid: string;
+  activity_id: number;
+  actor_id?: number;
+  name: string;
+  priority: 'Need' | 'Want' | 'Nice';
+  implementation_state: 'Full' | 'Partial' | 'None';
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  activity_uid?: string;
+  activity_name?: string;
+  map_uid?: string;
+  map_name?: string;
+  actor_name?: string;
+  action_name?: string;
+  action_priority?: string;
+  action_id?: number;
+}

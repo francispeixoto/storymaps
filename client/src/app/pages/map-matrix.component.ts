@@ -7,7 +7,7 @@ import { ActivityService } from '../services/activity.service';
 import { ActionService } from '../services/action.service';
 import { ActorService } from '../services/actor.service';
 import { ConfirmDeleteDialogComponent } from '../components/confirm-delete-dialog.component';
-import { Map, Activity, Action, Actor } from '../models';
+import { Map, Activity, Action, Actor, ActionDependency, ActionWithContext } from '../models';
 
 @Component({
   selector: 'app-map-matrix',
@@ -98,17 +98,19 @@ import { Map, Activity, Action, Actor } from '../models';
                   <div class="space-y-2 min-h-[60px]">
                     <div
                       *ngFor="let action of getActions(activity.id, priority)"
-                      class="action-card cursor-pointer"
+                      class="action-card cursor-pointer relative px-2 py-2"
                       (click)="openEditActionModal(action)"
                     >
-                      <div class="flex items-center gap-2">
-                        <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full"></span>
-                        <span class="font-medium flex-1">{{ action.name }}</span>
-                        <span class="ml-2 px-1.5 py-0.5 text-xs rounded bg-gray-100">
+                      <div *ngIf="inputsMap.get(action.id)" class="absolute left-0 -translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Has incoming dependencies"></div>
+                      <div class="flex items-center gap-2 pl-3">
+                        <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
+                        <span class="font-medium flex-1 truncate">{{ action.name }}</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100 flex-shrink-0">
                           {{ action.actor_name || '-' }}
                         </span>
                       </div>
-                      <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs">{{ action.description }}</p>
+                      <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs pl-3">{{ action.description }}</p>
+                      <div *ngIf="outputsMap.get(action.id)" class="absolute right-0 translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Is prerequisite for other actions"></div>
                     </div>
                     <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-300 text-sm">
                       -
@@ -272,7 +274,34 @@ import { Map, Activity, Action, Actor } from '../models';
             <label class="block text-sm font-medium text-gray-700">Description</label>
             <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
           </div>
-          <div class="flex justify-between items-center">
+
+          <div class="border-t pt-4 mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Depends on:</label>
+            <div *ngIf="actionDependencies.length === 0" class="text-sm text-gray-500">No dependencies</div>
+            <div *ngFor="let dep of actionDependencies" class="flex items-center justify-between text-sm py-1">
+              <span>{{ getDependencyActionName(dep.depends_on_action_id) }}</span>
+              <button type="button" (click)="removeDependency(dep.depends_on_action_id)" class="text-red-600 hover:text-red-800 text-xs">×</button>
+            </div>
+          </div>
+
+          <div *ngIf="actionPrerequisitesOf.length > 0" class="border-t pt-4 mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Prerequisite of:</label>
+            <div *ngFor="let preq of actionPrerequisitesOf" class="text-sm text-gray-500 py-1">
+              {{ preq.action_name || preq.name }} ({{ preq.action_priority || preq.priority }})
+            </div>
+          </div>
+
+          <div class="border-t pt-4 mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Add dependency:</label>
+            <select #depSelect (change)="onAddDependencySelected(depSelect.value); depSelect.value = ''" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border text-sm">
+              <option value="">Select action...</option>
+              <option *ngFor="let action of getAvailableActionsFor(editingActionId || 0)" [value]="action.id">
+                {{ action.map_name }} / {{ action.activity_name }} / {{ action.name }} ({{ action.priority }})
+              </option>
+            </select>
+          </div>
+
+          <div class="flex justify-between items-center mt-4">
             <button type="button" (click)="confirmDeleteAction()" class="text-sm text-red-600 hover:text-red-800">
               Delete Action
             </button>
@@ -304,6 +333,9 @@ export class MapMatrixComponent implements OnInit {
   selectedImplementationStates: string[] = ['Full', 'Partial', 'None'];
   mapId: number | null = null;
 
+  inputsMap = new Map<number, boolean>();
+  outputsMap = new Map<number, boolean>();
+
   showAddActivityModal = false;
   showAddActionModal = false;
   showNewActorModal = false;
@@ -325,6 +357,9 @@ export class MapMatrixComponent implements OnInit {
   actors: Actor[] = [];
   submittingActivity = false;
   submittingAction = false;
+  allActionsWithContext: ActionWithContext[] = [];
+  actionDependencies: ActionDependency[] = [];
+  actionPrerequisitesOf: ActionWithContext[] = [];
 
   constructor(
     private mapService: MapService,
@@ -383,6 +418,8 @@ export class MapMatrixComponent implements OnInit {
       },
       error: (err) => console.error('Error loading activities:', err)
     });
+    this.loadAllActionsWithContext();
+    this.loadDependencyIndicators();
   }
 
   loadActors(): void {
@@ -390,6 +427,89 @@ export class MapMatrixComponent implements OnInit {
       next: (actors) => this.actors = actors,
       error: (err) => console.error('Error loading actors:', err)
     });
+  }
+
+  loadAllActionsWithContext(): void {
+    this.actionService.getAllWithContext().subscribe({
+      next: (actions) => {
+        this.allActionsWithContext = actions;
+      },
+      error: (err) => console.error('Error loading actions with context:', err)
+    });
+  }
+
+  loadDependencyIndicators(): void {
+    this.inputsMap.clear();
+    this.outputsMap.clear();
+    this.actions.forEach(action => {
+      this.actionService.getDependencies(action.id).subscribe({
+        next: (deps) => {
+          if (deps.length > 0) {
+            this.inputsMap.set(action.id, true);
+          }
+        },
+        error: (err) => console.error('Error loading dependencies:', err)
+      });
+      this.actionService.getPrerequisitesOf(action.id).subscribe({
+        next: (preqs) => {
+          if (preqs.length > 0) {
+            this.outputsMap.set(action.id, true);
+          }
+        },
+        error: (err) => console.error('Error loading prerequisites:', err)
+      });
+    });
+  }
+
+  loadActionDependencies(actionId: number): void {
+    this.actionService.getDependencies(actionId).subscribe({
+      next: (deps) => {
+        this.actionDependencies = deps;
+      },
+      error: (err) => console.error('Error loading dependencies:', err)
+    });
+    this.actionService.getPrerequisitesOf(actionId).subscribe({
+      next: (preqs) => {
+        this.actionPrerequisitesOf = preqs;
+      },
+      error: (err) => console.error('Error loading prerequisites:', err)
+    });
+  }
+
+  get actionTree(): { map: string; activities: { name: string; actions: ActionWithContext[] }[] }[] {
+    const tree: { map: string; activities: { name: string; actions: ActionWithContext[] }[] }[] = [];
+    const mapGroups = new Map<string, { name: string; actions: ActionWithContext[] }[]>();
+    
+    for (const action of this.allActionsWithContext) {
+      const mapName = action.map_name || 'Unknown Map';
+      const activityName = action.activity_name || 'Unknown Activity';
+      
+      if (!mapGroups.has(mapName)) {
+        mapGroups.set(mapName, []);
+      }
+      const activityGroups = mapGroups.get(mapName)!;
+      const activityGroup = activityGroups.find(g => g.name === activityName);
+      
+      if (activityGroup) {
+        activityGroup.actions.push(action);
+      } else {
+        activityGroups.push({ name: activityName, actions: [action] });
+      }
+    }
+    
+    mapGroups.forEach((activities, mapName) => {
+      tree.push({ map: mapName, activities });
+    });
+    
+    return tree.sort((a, b) => a.map.localeCompare(b.map));
+  }
+
+  getAvailableActionsFor(actionId: number): ActionWithContext[] {
+    const currentDepIds = this.actionDependencies.map(d => d.depends_on_action_id);
+    const prerequisiteOfIds = this.actionPrerequisitesOf.map(p => p.action_id);
+    return this.allActionsWithContext.filter(a => 
+      a.id !== actionId && !currentDepIds.includes(a.id) && !prerequisiteOfIds.includes(a.id)
+    );
   }
 
   loadActions(activities: Activity[]): void {
@@ -575,6 +695,7 @@ export class MapMatrixComponent implements OnInit {
       implementation_state: action.implementation_state,
       description: action.description || ''
     });
+    this.loadActionDependencies(action.id);
     this.showEditActionModal = true;
   }
 
@@ -642,5 +763,36 @@ export class MapMatrixComponent implements OnInit {
 
   onDeleteCancelled(): void {
     this.closeDeleteDialog();
+  }
+
+  addDependency(dependsOnActionId: number): void {
+    if (!this.editingActionId) return;
+    this.actionService.addDependency(this.editingActionId, dependsOnActionId).subscribe({
+      next: () => {
+        this.loadActionDependencies(this.editingActionId!);
+      },
+      error: (err) => console.error('Error adding dependency:', err)
+    });
+  }
+
+  onAddDependencySelected(value: string): void {
+    if (value) {
+      this.addDependency(+value);
+    }
+  }
+
+  removeDependency(dependsOnActionId: number): void {
+    if (!this.editingActionId) return;
+    this.actionService.removeDependency(this.editingActionId, dependsOnActionId).subscribe({
+      next: () => {
+        this.loadActionDependencies(this.editingActionId!);
+      },
+      error: (err) => console.error('Error removing dependency:', err)
+    });
+  }
+
+  getDependencyActionName(actionId: number): string {
+    const action = this.allActionsWithContext.find(a => a.id === actionId);
+    return action ? `${action.name || action.action_name} (${action.priority || action.action_priority})` : '';
   }
 }
