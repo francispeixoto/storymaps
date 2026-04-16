@@ -101,7 +101,7 @@ import { Map, Activity, Action, Actor, ActionDependency, ActionWithContext } fro
                       class="action-card cursor-pointer relative px-2 py-2"
                       (click)="openEditActionModal(action)"
                     >
-                      <div *ngIf="inputsMap.get(action.id)" class="absolute left-1 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Has incoming dependencies"></div>
+                      <div *ngIf="inputsMap.get(action.id)" class="absolute left-0 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Has incoming dependencies"></div>
                       <div class="flex items-center gap-2 pl-3">
                         <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
                         <span class="font-medium flex-1 truncate">{{ action.name }}</span>
@@ -110,7 +110,7 @@ import { Map, Activity, Action, Actor, ActionDependency, ActionWithContext } fro
                         </span>
                       </div>
                       <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs pl-3">{{ action.description }}</p>
-                      <div *ngIf="outputsMap.get(action.id)" class="absolute right-1 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Is prerequisite for other actions"></div>
+                      <div *ngIf="outputsMap.get(action.id)" class="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Is prerequisite for other actions"></div>
                     </div>
                     <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-300 text-sm">
                       -
