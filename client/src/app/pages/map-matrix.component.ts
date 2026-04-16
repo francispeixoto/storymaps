@@ -98,9 +98,10 @@ import { Map, Activity, Action, Actor, ActionDependency, ActionWithContext } fro
                   <div class="space-y-2 min-h-[60px]">
                     <div
                       *ngFor="let action of getActions(activity.id, priority)"
-                      class="action-card cursor-pointer"
+                      class="action-card cursor-pointer relative"
                       (click)="openEditActionModal(action)"
                     >
+                      <div *ngIf="inputsMap.get(action.id)" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Has inputs"></div>
                       <div class="flex items-center gap-2">
                         <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full"></span>
                         <span class="font-medium flex-1">{{ action.name }}</span>
@@ -109,6 +110,7 @@ import { Map, Activity, Action, Actor, ActionDependency, ActionWithContext } fro
                         </span>
                       </div>
                       <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs">{{ action.description }}</p>
+                      <div *ngIf="outputsMap.get(action.id)" class="absolute right-1 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Is prerequisite for others"></div>
                     </div>
                     <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-300 text-sm">
                       -
@@ -331,6 +333,9 @@ export class MapMatrixComponent implements OnInit {
   selectedImplementationStates: string[] = ['Full', 'Partial', 'None'];
   mapId: number | null = null;
 
+  inputsMap = new Map<number, boolean>();
+  outputsMap = new Map<number, boolean>();
+
   showAddActivityModal = false;
   showAddActionModal = false;
   showNewActorModal = false;
@@ -414,6 +419,7 @@ export class MapMatrixComponent implements OnInit {
       error: (err) => console.error('Error loading activities:', err)
     });
     this.loadAllActionsWithContext();
+    this.loadDependencyIndicators();
   }
 
   loadActors(): void {
@@ -429,6 +435,29 @@ export class MapMatrixComponent implements OnInit {
         this.allActionsWithContext = actions;
       },
       error: (err) => console.error('Error loading actions with context:', err)
+    });
+  }
+
+  loadDependencyIndicators(): void {
+    this.inputsMap.clear();
+    this.outputsMap.clear();
+    this.actions.forEach(action => {
+      this.actionService.getDependencies(action.id).subscribe({
+        next: (deps) => {
+          if (deps.length > 0) {
+            this.inputsMap.set(action.id, true);
+          }
+        },
+        error: (err) => console.error('Error loading dependencies:', err)
+      });
+      this.actionService.getPrerequisitesOf(action.id).subscribe({
+        next: (preqs) => {
+          if (preqs.length > 0) {
+            this.outputsMap.set(action.id, true);
+          }
+        },
+        error: (err) => console.error('Error loading prerequisites:', err)
+      });
     });
   }
 
