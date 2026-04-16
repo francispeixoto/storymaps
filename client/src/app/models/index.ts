@@ -82,4 +82,6 @@ export interface ActionWithContext {
   map_uid?: string;
   map_name?: string;
   actor_name?: string;
+  action_name?: string;
+  action_priority?: string;
 }

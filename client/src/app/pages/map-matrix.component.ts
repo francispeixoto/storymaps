@@ -285,7 +285,7 @@ import { Map, Activity, Action, Actor, ActionDependency, ActionWithContext } fro
           <div *ngIf="actionPrerequisitesOf.length > 0" class="border-t pt-4 mt-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">Prerequisite of:</label>
             <div *ngFor="let preq of actionPrerequisitesOf" class="text-sm text-gray-500 py-1">
-              {{ preq.name }} ({{ preq.priority }})
+              {{ preq.action_name || preq.name }} ({{ preq.action_priority || preq.priority }})
             </div>
           </div>
 
@@ -763,6 +763,6 @@ export class MapMatrixComponent implements OnInit {
 
   getDependencyActionName(actionId: number): string {
     const action = this.allActionsWithContext.find(a => a.id === actionId);
-    return action ? `${action.name} (${action.priority})` : '';
+    return action ? `${action.name || action.action_name} (${action.priority || action.action_priority})` : '';
   }
 }
