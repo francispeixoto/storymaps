@@ -79,6 +79,7 @@ export interface ActionWithContext {
   updated_at: string;
   activity_uid?: string;
   activity_name?: string;
+  map_id?: number;
   map_uid?: string;
   map_name?: string;
   actor_name?: string;
