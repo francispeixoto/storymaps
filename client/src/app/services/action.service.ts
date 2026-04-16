@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Action, ActionDependency } from '../models';
+import { Action, ActionDependency, ActionWithContext } from '../models';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -23,6 +23,10 @@ export class ActionService {
     return this.http.get<Action[]>(url);
   }
 
+  getAllWithContext(): Observable<ActionWithContext[]> {
+    return this.http.get<ActionWithContext[]>(`${this.apiUrl}/all-with-context`);
+  }
+
   getById(id: number): Observable<Action> {
     return this.http.get<Action>(`${this.apiUrl}/${id}`);
   }
@@ -42,6 +46,10 @@ export class ActionService {
 
   getDependencies(actionId: number): Observable<ActionDependency[]> {
     return this.http.get<ActionDependency[]>(`${this.apiUrl}/${actionId}/dependencies`);
+  }
+
+  getPrerequisitesOf(actionId: number): Observable<ActionWithContext[]> {
+    return this.http.get<ActionWithContext[]>(`${this.apiUrl}/${actionId}/prerequisites-of`);
   }
 
   addDependency(actionId: number, dependsOnActionId: number): Observable<ActionDependency> {
