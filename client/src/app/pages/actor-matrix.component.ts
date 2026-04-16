@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActorService } from '../services/actor.service';
 import { MapService } from '../services/map.service';
-import { Actor, ActorAction, Map } from '../models';
+import { ActionService } from '../services/action.service';
+import { Actor, ActorAction, Map, ActionWithContext, ActionDependency } from '../models';
 
 @Component({
   selector: 'app-actor-matrix',
@@ -76,16 +77,19 @@ import { Actor, ActorAction, Map } from '../models';
                 <div class="space-y-2 min-h-[60px]">
                   <div
                     *ngFor="let action of getActions(activity, priority)"
-                    class="p-2 rounded bg-gray-50 border border-gray-200 text-sm"
+                    class="p-2 rounded bg-gray-50 border border-gray-200 text-sm relative cursor-pointer hover:bg-gray-100"
+                    (click)="openActionModal(action)"
                   >
-                    <div class="flex items-center gap-2">
+                    <div *ngIf="inputsMap.get(action.id)" class="absolute left-0 -translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Has incoming dependencies"></div>
+                    <div class="flex items-center gap-2 pl-3">
                       <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
-                      <span class="font-medium flex-1">{{ action.name }}</span>
-                      <span class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                      <span class="font-medium flex-1 truncate">{{ action.name }}</span>
+                      <span class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800 flex-shrink-0">
                         {{ action.map_name }}
                       </span>
                     </div>
-                    <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs">{{ action.description }}</p>
+                    <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs pl-3">{{ action.description }}</p>
+                    <div *ngIf="outputsMap.get(action.id)" class="absolute right-0 translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Is prerequisite for other actions"></div>
                   </div>
                   <div *ngIf="getActions(activity, priority).length === 0" class="text-gray-300 text-sm">
                     -
@@ -96,12 +100,53 @@ import { Actor, ActorAction, Map } from '../models';
           </tbody>
         </table>
       </div>
+
+      <!-- Read-Only Action Modal -->
+      <div *ngIf="showActionModal && selectedAction" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <h3 class="text-lg font-medium mb-4">Action Details</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Action Name</label>
+              <p class="mt-1 text-gray-900">{{ selectedAction.name }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Priority</label>
+              <p class="mt-1 text-gray-900">{{ selectedAction.priority }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Implementation State</label>
+              <p class="mt-1 text-gray-900">{{ selectedAction.implementation_state }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Description</label>
+              <p class="mt-1 text-gray-900">{{ selectedAction.description || '-' }}</p>
+            </div>
+            <div *ngIf="actionDependencies.length > 0" class="border-t pt-4 mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Depends on:</label>
+              <div *ngFor="let dep of actionDependencies" class="text-sm text-gray-500 py-1">
+                {{ getDependencyActionName(dep.depends_on_action_id) }}
+              </div>
+            </div>
+            <div *ngIf="actionPrerequisitesOf.length > 0" class="border-t pt-4 mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Prerequisite of:</label>
+              <div *ngFor="let preq of actionPrerequisitesOf" class="text-sm text-gray-500 py-1">
+                {{ preq.action_name || preq.name }} ({{ preq.action_priority || preq.priority }})
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end mt-4">
+            <button type="button" (click)="closeActionModal()" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
   `
 })
 export class ActorMatrixComponent implements OnInit {
   actor: Actor | null = null;
   actions: ActorAction[] = [];
+  allActionsWithContext: ActionWithContext[] = [];
   maps: Map[] = [];
   selectedMapIds: number[] = [];
   priorities = ['Need', 'Want', 'Nice'];
@@ -109,9 +154,18 @@ export class ActorMatrixComponent implements OnInit {
   selectedImplementationStates: string[] = ['Full', 'Partial', 'None'];
   actorId: number | null = null;
 
+  inputsMap = new Map<number, boolean>();
+  outputsMap = new Map<number, boolean>();
+
+  showActionModal = false;
+  selectedAction: ActorAction | null = null;
+  actionDependencies: ActionDependency[] = [];
+  actionPrerequisitesOf: ActionWithContext[] = [];
+
   constructor(
     private actorService: ActorService,
     private mapService: MapService,
+    private actionService: ActionService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -152,9 +206,76 @@ export class ActorMatrixComponent implements OnInit {
     this.actorService.getActions(this.actorId).subscribe({
       next: (actions: ActorAction[]) => {
         this.actions = actions;
+        this.loadAllActionsWithContext();
       },
       error: (err: any) => console.error('Error loading actions:', err)
     });
+  }
+
+  loadAllActionsWithContext(): void {
+    this.actionService.getAllWithContext().subscribe({
+      next: (actions: ActionWithContext[]) => {
+        this.allActionsWithContext = actions;
+        this.loadDependencyIndicators();
+      },
+      error: (err: any) => console.error('Error loading all actions:', err)
+    });
+  }
+
+  loadDependencyIndicators(): void {
+    this.inputsMap.clear();
+    this.outputsMap.clear();
+    this.actions.forEach(action => {
+      this.actionService.getDependencies(action.id).subscribe({
+        next: (deps) => {
+          if (deps.length > 0) {
+            this.inputsMap.set(action.id, true);
+          }
+        },
+        error: (err) => console.error('Error loading dependencies:', err)
+      });
+      this.actionService.getPrerequisitesOf(action.id).subscribe({
+        next: (preqs) => {
+          if (preqs.length > 0) {
+            this.outputsMap.set(action.id, true);
+          }
+        },
+        error: (err) => console.error('Error loading prerequisites:', err)
+      });
+    });
+  }
+
+  openActionModal(action: ActorAction): void {
+    this.selectedAction = action;
+    this.loadActionDependencies(action.id);
+    this.showActionModal = true;
+  }
+
+  loadActionDependencies(actionId: number): void {
+    this.actionService.getDependencies(actionId).subscribe({
+      next: (deps) => {
+        this.actionDependencies = deps;
+      },
+      error: (err) => console.error('Error loading dependencies:', err)
+    });
+    this.actionService.getPrerequisitesOf(actionId).subscribe({
+      next: (preqs) => {
+        this.actionPrerequisitesOf = preqs;
+      },
+      error: (err) => console.error('Error loading prerequisites:', err)
+    });
+  }
+
+  closeActionModal(): void {
+    this.showActionModal = false;
+    this.selectedAction = null;
+    this.actionDependencies = [];
+    this.actionPrerequisitesOf = [];
+  }
+
+  getDependencyActionName(actionId: number): string {
+    const dep = this.actionDependencies.find(d => d.depends_on_action_id === actionId);
+    return dep?.depends_on_name || `Action #${actionId}`;
   }
 
   isMapSelected(mapId: number): boolean {
