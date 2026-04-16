@@ -6,6 +6,7 @@ import { MapService } from '../services/map.service';
 import { ActivityService } from '../services/activity.service';
 import { ActionService } from '../services/action.service';
 import { ActorService } from '../services/actor.service';
+import { ToastService } from '../services/toast.service';
 import { ConfirmDeleteDialogComponent } from '../components/confirm-delete-dialog.component';
 import { Map, Activity, Action, Actor } from '../models';
 
@@ -178,148 +179,6 @@ import { Map, Activity, Action, Actor } from '../models';
           </div>
         </div>
 
-        <!-- Activities Section (Edit mode only) -->
-        <div *ngIf="mode === 'edit'" class="bg-white rounded-lg shadow p-6 border border-gray-200">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Activities</h3>
-            <button
-              type="button"
-              (click)="showActivityForm = !showActivityForm"
-              class="text-sm text-indigo-600 hover:text-indigo-800"
-            >
-              {{ showActivityForm ? 'Cancel' : '+ Add Activity' }}
-            </button>
-          </div>
-
-          <!-- Add Activity Form -->
-          <div *ngIf="showActivityForm" class="mb-4 p-4 bg-gray-50 rounded-lg">
-            <form [formGroup]="activityForm" (ngSubmit)="addActivity()" class="space-y-4">
-              <div>
-                <label for="activityName" class="block text-sm font-medium text-gray-700">Activity Name *</label>
-                <input
-                  type="text"
-                  id="activityName"
-                  formControlName="name"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                />
-              </div>
-              <div>
-                <label for="priority" class="block text-sm font-medium text-gray-700">Priority *</label>
-                <select
-                  id="priority"
-                  formControlName="priority"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                >
-                  <option value="Need">Need</option>
-                  <option value="Want">Want</option>
-                  <option value="Nice">Nice</option>
-                </select>
-              </div>
-              <button
-                type="submit"
-                [disabled]="activityForm.invalid || submittingActivity"
-                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {{ submittingActivity ? 'Adding...' : 'Add Activity' }}
-              </button>
-            </form>
-          </div>
-
-          <!-- Activity List -->
-          <div *ngIf="activities.length === 0" class="text-gray-500">No activities yet. Add your first activity above.</div>
-          <div *ngFor="let activity of activities" class="border-b border-gray-200 last:border-0">
-            <div class="flex items-center justify-between py-2">
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  (click)="toggleActivityActions(activity.id)"
-                  class="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  {{ expandedActivityId === activity.id ? '▼' : '▶' }}
-                </button>
-                <span class="font-medium">{{ activity.name }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-400">{{ activity.uid }}</span>
-                <button
-                  type="button"
-                  (click)="deleteActivity(activity.id, activity.name)"
-                  class="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-            <!-- Actions inside activity (edit mode) -->
-            <div *ngIf="expandedActivityId === activity.id" class="ml-6 pl-4 border-l-2 border-gray-200 pb-2">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-sm text-gray-500">Actions ({{ getActivityActions(activity.id).length }})</span>
-                <button
-                  type="button"
-                  (click)="showAddActionForm(activity.id)"
-                  class="text-xs text-indigo-600 hover:text-indigo-800"
-                >
-                  {{ addActionToActivityId === activity.id ? 'Cancel' : '+ Add Action' }}
-                </button>
-              </div>
-              <!-- Add Action Form -->
-              <div *ngIf="addActionToActivityId === activity.id" class="mb-2 p-2 bg-gray-50 rounded text-sm">
-                <form [formGroup]="actionForm" (ngSubmit)="addAction(activity.id)" class="space-y-2">
-                  <input
-                    type="text"
-                    formControlName="name"
-                    placeholder="Action name *"
-                    class="w-full rounded border-gray-300 px-2 py-1 text-sm"
-                  />
-                  <div class="flex gap-2">
-                    <div class="flex items-center gap-1">
-                      <select formControlName="actor_id" class="rounded border-gray-300 px-2 py-1 text-sm">
-                        <option [ngValue]="null">Select actor...</option>
-                        <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
-                      </select>
-                      <button type="button" (click)="showNewActorModal = true" class="text-indigo-600 hover:text-indigo-800 text-xs">+ New</button>
-                    </div>
-                    <select formControlName="priority" class="rounded border-gray-300 px-2 py-1 text-sm">
-                      <option value="Need">Need</option>
-                      <option value="Want">Want</option>
-                      <option value="Nice">Nice</option>
-                    </select>
-                  </div>
-                  <textarea
-                    formControlName="description"
-                    placeholder="Description (optional)"
-                    rows="2"
-                    class="w-full rounded border-gray-300 px-2 py-1 text-sm"
-                  ></textarea>
-                  <button
-                    type="submit"
-                    [disabled]="actionForm.invalid || submittingAction"
-                    class="px-2 py-1 bg-indigo-600 text-white text-xs rounded"
-                  >
-                    {{ submittingAction ? 'Adding...' : 'Add' }}
-                  </button>
-                </form>
-              </div>
-              <!-- Actions List -->
-              <div *ngFor="let action of getActivityActions(activity.id)" class="flex items-center justify-between py-1 text-sm border-b border-gray-100 last:border-0">
-                <div class="flex items-center gap-2">
-                  <span>{{ action.name }}</span>
-                  <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100">{{ action.actor_name || '-' }}</span>
-                  <span [class]="getPriorityClass(action.priority)" class="px-1.5 py-0.5 text-xs rounded">{{ action.priority }}</span>
-                </div>
-                <button
-                  type="button"
-                  (click)="deleteAction(action.id, activity.id, action.name)"
-                  class="text-red-600 hover:text-red-800 text-xs"
-                >
-                  Delete
-                </button>
-              </div>
-              <div *ngIf="getActivityActions(activity.id).length === 0" class="text-gray-400 text-sm py-1">No actions</div>
-            </div>
-          </div>
-        </div>
-
         <div class="flex gap-4">
           <button
             type="submit"
@@ -404,6 +263,7 @@ export class MapFormComponent implements OnInit {
     private activityService: ActivityService,
     private actionService: ActionService,
     private actorService: ActorService,
+    private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -706,22 +566,26 @@ export class MapFormComponent implements OnInit {
     if (this.mode === 'edit' && this.mapId) {
       this.mapService.update(this.mapId, formValue).subscribe({
         next: () => {
+          this.toastService.showSuccess(`Map '${formValue.name}' updated successfully`);
           this.router.navigate(['/']);
         },
         error: (err) => {
           console.error('Error updating map:', err);
           this.error = 'Failed to update map. Please try again.';
+          this.toastService.showError('Failed to update map');
           this.submitting = false;
         }
       });
     } else {
       this.mapService.create(formValue).subscribe({
         next: () => {
+          this.toastService.showSuccess(`Map '${formValue.name}' created successfully`);
           this.router.navigate(['/']);
         },
         error: (err) => {
           console.error('Error creating map:', err);
           this.error = 'Failed to create map. Please try again.';
+          this.toastService.showError('Failed to create map');
           this.submitting = false;
         }
       });

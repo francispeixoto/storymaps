@@ -3,38 +3,16 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActorService } from '../services/actor.service';
+import { ToastService } from '../services/toast.service';
 import { Actor } from '../models';
-import { ActorMatrixComponent } from './actor-matrix.component';
 
 @Component({
   selector: 'app-actor-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ActorMatrixComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <!-- View Mode - Full Width -->
-    <div *ngIf="mode === 'view'" class="max-w-full mx-auto">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Actor Details</h2>
-        <div class="flex gap-2">
-          <button
-            (click)="goToEdit()"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Edit
-          </button>
-          <button
-            (click)="goBack()"
-            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Back
-          </button>
-        </div>
-      </div>
-      <app-actor-matrix></app-actor-matrix>
-    </div>
-
-    <!-- Form Mode (Create/Edit) - Narrow Width -->
-    <div *ngIf="mode !== 'view'" class="max-w-4xl mx-auto">
+    <!-- Form Mode (Create/Edit) -->
+    <div class="max-w-4xl mx-auto">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold">
           {{ mode === 'create' ? 'Create New Actor' : 'Edit Actor' }}
@@ -95,13 +73,14 @@ export class ActorFormComponent implements OnInit {
   actorForm!: FormGroup;
   submitting = false;
   error = '';
-  mode: 'create' | 'edit' | 'view' = 'create';
+  mode: 'create' | 'edit' = 'create';
   actor: Actor | null = null;
   actorId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
     private actorService: ActorService,
+    private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -155,22 +134,26 @@ export class ActorFormComponent implements OnInit {
     if (this.mode === 'edit' && this.actorId) {
       this.actorService.update(this.actorId, formValue).subscribe({
         next: () => {
+          this.toastService.showSuccess(`Actor '${formValue.name}' updated successfully`);
           this.router.navigate(['/actors']);
         },
         error: (err) => {
           console.error('Error updating actor:', err);
           this.error = 'Failed to update actor. Please try again.';
+          this.toastService.showError('Failed to update actor');
           this.submitting = false;
         }
       });
     } else {
       this.actorService.create(formValue).subscribe({
         next: () => {
+          this.toastService.showSuccess(`Actor '${formValue.name}' created successfully`);
           this.router.navigate(['/actors']);
         },
         error: (err) => {
           console.error('Error creating actor:', err);
           this.error = 'Failed to create actor. Please try again.';
+          this.toastService.showError('Failed to create actor');
           this.submitting = false;
         }
       });

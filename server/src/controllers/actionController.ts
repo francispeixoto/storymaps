@@ -217,6 +217,8 @@ export const getAllActionsWithContext = (_req: Request, res: Response): void => 
       a.*,
       act.uid as activity_uid,
       act.name as activity_name,
+      act.description as activity_description,
+      m.id as map_id,
       m.uid as map_uid,
       m.name as map_name,
       actors.name as actor_name
