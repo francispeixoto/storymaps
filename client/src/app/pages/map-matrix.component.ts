@@ -477,8 +477,9 @@ export class MapMatrixComponent implements OnInit {
 
   getAvailableActionsFor(actionId: number): ActionWithContext[] {
     const currentDepIds = this.actionDependencies.map(d => d.depends_on_action_id);
+    const prerequisiteOfIds = this.actionPrerequisitesOf.map(p => p.action_id);
     return this.allActionsWithContext.filter(a => 
-      a.id !== actionId && !currentDepIds.includes(a.id)
+      a.id !== actionId && !currentDepIds.includes(a.id) && !prerequisiteOfIds.includes(a.id)
     );
   }
 

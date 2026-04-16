@@ -84,4 +84,5 @@ export interface ActionWithContext {
   actor_name?: string;
   action_name?: string;
   action_priority?: string;
+  action_id?: number;
 }

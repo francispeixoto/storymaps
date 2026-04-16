@@ -135,6 +135,14 @@ export const addActionDependency = (req: Request, res: Response): void => {
     return;
   }
 
+  const directReverse = db.prepare(
+    'SELECT id FROM action_dependencies WHERE action_id = ? AND depends_on_action_id = ?'
+  ).get(targetId, actionId);
+  if (directReverse) {
+    res.status(400).json({ error: 'Cannot add dependency: would create circular dependency' });
+    return;
+  }
+
   const stmt = db.prepare(
     'INSERT INTO action_dependencies (action_id, depends_on_action_id) VALUES (?, ?)'
   );
@@ -149,11 +157,11 @@ function checkCircularDependency(actionId: number, targetId: number, visited: Se
   visited.add(targetId);
   
   const dependencies = db.prepare(
-    'SELECT action_id FROM action_dependencies WHERE depends_on_action_id = ?'
-  ).all(targetId) as { action_id: number }[];
+    'SELECT depends_on_action_id FROM action_dependencies WHERE action_id = ?'
+  ).all(targetId) as { depends_on_action_id: number }[];
   
   for (const dep of dependencies) {
-    if (checkCircularDependency(actionId, dep.action_id, visited)) {
+    if (checkCircularDependency(actionId, dep.depends_on_action_id, visited)) {
       return true;
     }
   }
