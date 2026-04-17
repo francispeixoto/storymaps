@@ -90,6 +90,7 @@ import { Context, Map } from '../models';
       *ngIf="showMapSelector && context"
       [contextId]="context.id"
       (mapAdded)="onMapAdded($event)"
+      (mapCreated)="onMapCreated($event)"
       (close)="showMapSelector = false"
     ></app-map-selector-modal>
 
@@ -162,6 +163,13 @@ export class ContextDetailComponent implements OnInit {
         this.toastService.showError('Failed to add map');
       }
     });
+  }
+
+  onMapCreated(mapId: number): void {
+    this.loadContext(this.context!.id);
+    this.expandedMapId = mapId;
+    this.showMapSelector = false;
+    this.toastService.showSuccess('Map created and added to context');
   }
 
   removeMap(map: Map): void {
