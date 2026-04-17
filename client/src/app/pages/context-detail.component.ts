@@ -113,55 +113,7 @@ import { Context, Map } from '../models';
             </button>
           </div>
           <div *ngIf="expandedMapId === map.id" class="p-4">
-            <div *ngIf="map.health && map.health.totalActions > 0" class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h4 class="text-sm font-medium text-gray-700 mb-2">Implementation by Priority</h4>
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="text-left text-gray-500 text-xs">
-                    <th class="pb-2">Priority</th>
-                    <th class="pb-2">Full</th>
-                    <th class="pb-2">Partial</th>
-                    <th class="pb-2">None</th>
-                    <th class="pb-2 w-32">Progress</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let priority of ['Need', 'Want', 'Nice']" class="border-t border-gray-200">
-                    <td class="py-2 font-medium">{{ priority }}</td>
-                    <td class="py-2">
-                      <span *ngIf="map.health!.byPriority[priority].full > 0" class="text-green-600">
-                        {{ map.health!.byPriority[priority].full }}
-                      </span>
-                      <span *ngIf="map.health!.byPriority[priority].full === 0" class="text-gray-400">-</span>
-                    </td>
-                    <td class="py-2">
-                      <span *ngIf="map.health!.byPriority[priority].partial > 0" class="text-yellow-600">
-                        {{ map.health!.byPriority[priority].partial }}
-                      </span>
-                      <span *ngIf="map.health!.byPriority[priority].partial === 0" class="text-gray-400">-</span>
-                    </td>
-                    <td class="py-2">
-                      <span *ngIf="map.health!.byPriority[priority].none > 0" class="text-red-600">
-                        {{ map.health!.byPriority[priority].none }}
-                      </span>
-                      <span *ngIf="map.health!.byPriority[priority].none === 0" class="text-gray-400">-</span>
-                    </td>
-                    <td class="py-2">
-                      <div class="flex items-center gap-2">
-                        <div class="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
-                          <div 
-                            class="h-full bg-indigo-500 transition-all"
-                            [style.width.%]="getPriorityProgress(map.health!.byPriority[priority])"
-                          ></div>
-                        </div>
-                        <span class="text-xs text-gray-500 w-8">{{ map.health!.byPriority[priority].score }}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <app-matrix [mapId]="map.id" (dataChanged)="onDataChanged()"></app-matrix>
+            <app-matrix [mapId]="map.id" [health]="map.health || null" (dataChanged)="onDataChanged()"></app-matrix>
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { ActionService } from '../services/action.service';
 import { ActivityService } from '../services/activity.service';
 import { ToastService } from '../services/toast.service';
 import { ConfirmDeleteDialogComponent } from '../components/confirm-delete-dialog.component';
-import { Map, Actor, Activity, Action, ActionDependency, ActionWithContext } from '../models';
+import { Map, Actor, Activity, Action, ActionDependency, ActionWithContext, MapHealth } from '../models';
 
 type ViewMode = 'map' | 'actor';
 
@@ -153,6 +153,33 @@ interface DropdownOption {
               </span>
             </label>
           </div>
+        </div>
+
+      <div *ngIf="hasHealthData && displayHealth" class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <div class="flex items-center justify-between mb-3">
+          <span class="font-medium text-indigo-900">{{ viewMode === 'actor' ? 'Satisfaction' : 'Implementation' }}</span>
+          <span [class]="getScoreClass(displayHealth.score) + ' text-lg font-bold'">
+            {{ displayHealth.score }}
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-3">
+          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white rounded p-2">
+            <div class="text-xs text-gray-500 mb-1">{{ priority }}</div>
+            <div class="flex items-center gap-1 text-xs">
+              <span class="text-green-600">{{ displayHealth.byPriority[priority].full }}F</span>
+              <span class="text-yellow-600">{{ displayHealth.byPriority[priority].partial }}P</span>
+              <span class="text-red-600">{{ displayHealth.byPriority[priority].none }}N</span>
+            </div>
+            <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
+              <div 
+                class="h-full bg-indigo-500 transition-all"
+                [style.width.%]="getPriorityProgress(displayHealth.byPriority[priority])"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-xs text-gray-600">
+          Overall: {{ displayHealth.fullCount }} Full / {{ displayHealth.partialCount }} Partial / {{ displayHealth.noneCount }} None ({{ displayHealth.totalActions }} total)
         </div>
       </div>
 
@@ -507,6 +534,7 @@ interface DropdownOption {
 export class MatrixComponent implements OnInit, OnChanges {
   @Input() contextId: number | null = null;
   @Input() mapId: number | null = null;
+  @Input() health: MapHealth | null = null;
   @Output() dataChanged = new EventEmitter<void>();
   
   viewMode: ViewMode = 'map';
@@ -859,10 +887,132 @@ export class MatrixComponent implements OnInit, OnChanges {
 
   get pageSubtitle(): string {
     if (this.viewMode === 'actor') {
+      const sat = this.displayHealth?.score;
       const count = this.currentActor?.action_count || 0;
+      if (sat !== undefined) {
+        return `Satisfaction: ${sat} • ${count} action${count !== 1 ? 's' : ''}`;
+      }
       return count > 0 ? `${count} action${count !== 1 ? 's' : ''}` : '';
     }
     return this.currentMap?.description || '';
+  }
+
+  get hasHealthData(): boolean {
+    return this.health !== null || (this.viewMode === 'actor' && this.actions.length > 0);
+  }
+
+  get displayHealth(): MapHealth | null {
+    if (this.health !== null) {
+      return this.health;
+    }
+    if (this.viewMode === 'actor' && this.actions.length > 0) {
+      return this.calculateHealthFromActions();
+    }
+    return null;
+  }
+
+  private calculateHealthFromActions(): MapHealth {
+    const priorityWeights: Record<string, number> = {
+      'Need': 3,
+      'Want': 2,
+      'Nice': 1
+    };
+    const implWeights: Record<string, number> = {
+      'Full': 1.0,
+      'Partial': 0.5,
+      'None': 0.0
+    };
+
+    const defaultPriorityResult = { full: 0, partial: 0, none: 0, total: 0, score: 0 };
+    const health: MapHealth = {
+      score: 0,
+      category: 'Empty',
+      totalActions: 0,
+      fullCount: 0,
+      partialCount: 0,
+      noneCount: 0,
+      byPriority: {
+        Need: { ...defaultPriorityResult },
+        Want: { ...defaultPriorityResult },
+        Nice: { ...defaultPriorityResult }
+      }
+    };
+
+    if (this.actions.length === 0) {
+      return health;
+    }
+
+    health.totalActions = this.actions.length;
+
+    let totalWeight = 0;
+    let weightedScore = 0;
+
+    for (const action of this.actions) {
+      const priorityWeight = priorityWeights[action.priority] || 1;
+      const implWeight = implWeights[action.implementation_state] || 0;
+      
+      totalWeight += priorityWeight;
+      weightedScore += priorityWeight * implWeight;
+
+      const priority = action.priority as keyof typeof health.byPriority;
+      if (health.byPriority[priority]) {
+        health.byPriority[priority].total++;
+        
+        switch (action.implementation_state) {
+          case 'Full':
+            health.fullCount++;
+            health.byPriority[priority].full++;
+            break;
+          case 'Partial':
+            health.partialCount++;
+            health.byPriority[priority].partial++;
+            break;
+          case 'None':
+            health.noneCount++;
+            health.byPriority[priority].none++;
+            break;
+        }
+      }
+    }
+
+    if (totalWeight > 0) {
+      health.score = Math.round((weightedScore / totalWeight) * 100);
+    }
+
+    if (health.score >= 50) {
+      health.category = 'Promoter';
+    } else if (health.score >= 1) {
+      health.category = 'Passive';
+    } else {
+      health.category = 'Detractor';
+    }
+
+    for (const priority of ['Need', 'Want', 'Nice'] as const) {
+      const p = health.byPriority[priority];
+      if (p.total > 0) {
+        let pWeight = 0;
+        pWeight += p.full * 1;
+        pWeight += p.partial * 0.5;
+        pWeight += p.none * 0;
+        const pScore = (pWeight / p.total) * 100;
+        p.score = Math.round(pScore);
+      }
+    }
+
+    return health;
+  }
+
+  getScoreClass(score: number | undefined): string {
+    if (score === undefined || score === null) return 'text-gray-500';
+    if (score >= 75) return 'text-green-600';
+    if (score >= 50) return 'text-yellow-600';
+    if (score >= 25) return 'text-orange-500';
+    return 'text-red-600';
+  }
+
+  getPriorityProgress(priorityStats: { full: number; partial: number; none: number; total: number; score: number }): number {
+    if (priorityStats.total === 0) return 0;
+    return priorityStats.score;
   }
 
   toggleActorDropdown(): void {
