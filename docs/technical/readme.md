@@ -8,6 +8,7 @@ This directory contains the technical documentation for StoryMaps, including arc
 - [Tech Stack](tech-stack/) - Technology choices and implementation details
 - [Infrastructure](infrastructure/) - Docker and deployment configuration
 - [API](api/) - REST API documentation
+- [Health Metrics](health-metrics.md) - Implementation score calculation and usage
 
 ## Prerequisites
 
