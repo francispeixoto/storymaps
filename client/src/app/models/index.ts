@@ -10,7 +10,6 @@ export interface Map {
 
 export interface MapHealth {
   score: number;
-  category: 'Promoter' | 'Passive' | 'Detractor' | 'Empty';
   totalActions: number;
   fullCount: number;
   partialCount: number;

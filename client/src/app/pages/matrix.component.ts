@@ -55,7 +55,7 @@ interface DropdownOption {
 
       <div *ngIf="hasHealthData && displayHealth" class="max-w-full mx-auto mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
         <div class="flex items-center justify-between mb-3">
-          <span class="font-medium text-indigo-900">{{ viewMode === 'actor' ? 'Satisfaction' : 'Implementation' }}</span>
+          <span class="font-medium text-indigo-900">Implementation</span>
           <span [class]="getScoreClass(displayHealth.score) + ' text-lg font-bold'">
             {{ displayHealth.score }}
           </span>
@@ -927,7 +927,6 @@ export class MatrixComponent implements OnInit, OnChanges {
     const defaultPriorityResult = { full: 0, partial: 0, none: 0, total: 0, score: 0 };
     const health: MapHealth = {
       score: 0,
-      category: 'Empty',
       totalActions: 0,
       fullCount: 0,
       partialCount: 0,
@@ -980,14 +979,6 @@ export class MatrixComponent implements OnInit, OnChanges {
       health.score = Math.round((weightedScore / totalWeight) * 100);
     }
 
-    if (health.score >= 50) {
-      health.category = 'Promoter';
-    } else if (health.score >= 1) {
-      health.category = 'Passive';
-    } else {
-      health.category = 'Detractor';
-    }
-
     for (const priority of ['Need', 'Want', 'Nice'] as const) {
       const p = health.byPriority[priority];
       if (p.total > 0) {
@@ -1007,7 +998,6 @@ export class MatrixComponent implements OnInit, OnChanges {
     if (score === undefined || score === null) return 'text-gray-500';
     if (score >= 75) return 'text-green-600';
     if (score >= 50) return 'text-yellow-600';
-    if (score >= 25) return 'text-orange-500';
     return 'text-red-600';
   }
 

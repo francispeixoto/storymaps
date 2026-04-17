@@ -1,6 +1,5 @@
 export interface MapHealth {
   score: number;
-  category: 'Promoter' | 'Passive' | 'Detractor' | 'Empty';
   totalActions: number;
   fullCount: number;
   partialCount: number;
@@ -34,7 +33,6 @@ export function calculateHealth(actions: ActionRow[]): MapHealth {
   
   const health: MapHealth = {
     score: 0,
-    category: 'Empty',
     totalActions: 0,
     fullCount: 0,
     partialCount: 0,
@@ -51,7 +49,6 @@ export function calculateHealth(actions: ActionRow[]): MapHealth {
   }
 
   health.totalActions = actions.length;
-  health.category = 'Detractor';
 
   let totalWeight = 0;
   let weightedScore = 0;
@@ -86,14 +83,6 @@ export function calculateHealth(actions: ActionRow[]): MapHealth {
 
   if (totalWeight > 0) {
     health.score = Math.round((weightedScore / totalWeight) * 100);
-  }
-
-  if (health.score >= 50) {
-    health.category = 'Promoter';
-  } else if (health.score >= 1) {
-    health.category = 'Passive';
-  } else {
-    health.category = 'Detractor';
   }
 
   for (const priority of ['Need', 'Want', 'Nice'] as const) {
