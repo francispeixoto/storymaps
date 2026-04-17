@@ -514,7 +514,7 @@ export class MatrixComponent implements OnInit {
   
   actors: Actor[] = [];
   maps: Map[] = [];
-  activities: { id: number; name: string; description?: string; map_id: number }[] = [];
+  activities: Activity[] = [];
   actions: ActionWithContext[] = [];
   
   priorities = ['Need', 'Want', 'Nice'];
@@ -715,32 +715,23 @@ export class MatrixComponent implements OnInit {
   }
 
   loadMapActivities(): void {
-    this.activities = [];
+    if (!this.mapId) return;
+    this.activityService.getAll(this.mapId).subscribe({
+      next: (activities) => {
+        this.activities = activities;
+      },
+      error: (err) => console.error('Error loading activities:', err)
+    });
   }
 
   loadActions(): void {
     this.actionService.getAllWithContext().subscribe({
       next: (actions) => {
         this.actions = actions;
-        this.extractActivities(actions);
         this.loadDependencyIndicators(actions);
       },
       error: (err) => console.error('Error loading actions:', err)
     });
-  }
-
-  extractActivities(actions: ActionWithContext[]): void {
-    const activityMap = new Map<number, { id: number; name: string; map_id: number }>();
-    for (const action of actions) {
-      if (action.activity_id && action.activity_name) {
-        activityMap.set(action.activity_id, {
-          id: action.activity_id,
-          name: action.activity_name,
-          map_id: action.map_id || 0
-        });
-      }
-    }
-    this.activities = Array.from(activityMap.values());
   }
 
   loadDependencyIndicators(actions: ActionWithContext[]): void {
@@ -809,20 +800,8 @@ export class MatrixComponent implements OnInit {
     });
   }
 
-  get uniqueActivities(): { id: number; name: string; description?: string }[] {
-    const activityMap = new Map<number, { id: number; name: string; description?: string }>();
-    for (const action of this.filteredActions) {
-      if (action.activity_id && action.activity_name) {
-        if (!activityMap.has(action.activity_id)) {
-          activityMap.set(action.activity_id, {
-            id: action.activity_id,
-            name: action.activity_name,
-            description: action.activity_description
-          });
-        }
-      }
-    }
-    return Array.from(activityMap.values());
+  get uniqueActivities(): Activity[] {
+    return this.activities;
   }
 
   get showActorFilter(): boolean {
