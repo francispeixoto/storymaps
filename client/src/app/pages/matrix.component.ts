@@ -809,7 +809,29 @@ export class MatrixComponent implements OnInit, OnChanges {
   }
 
   get uniqueActivities(): Activity[] {
-    return this.activities;
+    if (this.activities.length > 0) {
+      return this.activities;
+    }
+    
+    if (this.viewMode === 'actor') {
+      const activityMap = new Map<number, Activity>();
+      for (const action of this.actions) {
+        if (action.activity_id && !activityMap.has(action.activity_id)) {
+          activityMap.set(action.activity_id, {
+            id: action.activity_id,
+            uid: action.activity_uid || '',
+            name: action.activity_name || '',
+            description: action.activity_description,
+            map_id: action.map_id || 0,
+            created_at: '',
+            updated_at: ''
+          });
+        }
+      }
+      return Array.from(activityMap.values());
+    }
+    
+    return [];
   }
 
   get showActorFilter(): boolean {
