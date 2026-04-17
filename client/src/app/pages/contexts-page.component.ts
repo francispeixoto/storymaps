@@ -36,7 +36,7 @@ import { Context } from '../models';
           [class.border-blue-500]="context.is_default"
           (click)="viewContext(context)"
         >
-          <div class="flex justify-between items-start">
+          <div class="flex items-start">
             <div class="flex-1" (click)="viewContext(context)">
               <div class="flex items-center gap-2">
                 <h3 class="text-lg font-medium text-gray-900">{{ context.name }}</h3>
@@ -44,6 +44,10 @@ import { Context } from '../models';
               </div>
               <p *ngIf="context.description" class="mt-1 text-sm text-gray-500">{{ context.description }}</p>
               <p class="mt-2 text-sm text-gray-500">{{ context.map_count || 0 }} map{{ (context.map_count || 0) !== 1 ? 's' : '' }}</p>
+            </div>
+            <div [class]="getScoreClass(context.health?.score)" class="text-right flex-shrink-0 ml-3">
+              <span class="text-lg font-bold">{{ context.health?.score ?? 0 }}</span>
+              <span class="text-xs ml-1">{{ getImplementationLabel(context.health?.score) }}</span>
             </div>
             <div class="flex gap-2 ml-2" *ngIf="!context.is_default" (click)="$event.stopPropagation()">
               <button
@@ -148,5 +152,19 @@ export class ContextsPageComponent implements OnInit {
   onDeleteCancelled(): void {
     this.showDeleteConfirm = false;
     this.pendingDeleteContext = null;
+  }
+
+  getScoreClass(score: number | undefined): string {
+    if (score === undefined) return 'text-gray-500';
+    if (score >= 75) return 'text-green-600';
+    if (score >= 50) return 'text-yellow-600';
+    return 'text-red-600';
+  }
+
+  getImplementationLabel(score: number | undefined): string {
+    if (score === undefined) return 'Empty';
+    if (score >= 75) return 'Well Implemented';
+    if (score >= 50) return 'Partially Implemented';
+    return 'Needs Work';
   }
 }

@@ -8,8 +8,22 @@ export const getAllContexts = (_req: Request, res: Response): void => {
            (SELECT COUNT(*) FROM context_maps cm WHERE cm.context_id = c.id) as map_count
     FROM contexts c
     ORDER BY c.is_default DESC, c.name ASC
-  `).all();
-  res.json(contexts);
+  `).all() as any[];
+
+  const contextsWithHealth = contexts.map(context => {
+    const actions = db.prepare(`
+      SELECT a.priority, a.implementation_state
+      FROM actions a
+      JOIN activities act ON a.activity_id = act.id
+      JOIN context_maps cm ON act.map_id = cm.map_id
+      WHERE cm.context_id = ?
+    `).all(context.id) as { priority: string; implementation_state: string }[];
+    
+    const health: MapHealth = calculateHealth(actions);
+    return { ...context, health };
+  });
+
+  res.json(contextsWithHealth);
 };
 
 export const getContextById = (req: Request, res: Response): void => {
