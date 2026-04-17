@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import db from '../models/db';
-import { calculateHealth } from '../utils/health';
+import { calculateHealth, MapHealth } from '../utils/health';
 
 interface ActorWithSatisfaction {
   id: number;
@@ -11,28 +11,29 @@ interface ActorWithSatisfaction {
   updated_at: string;
   satisfaction: number;
   action_count: number;
+  health?: MapHealth;
 }
 
-function getSatisfaction(actorId: number): { score: number; actionCount: number } {
+function getHealthData(actorId: number): MapHealth {
   const actions = db.prepare(`
     SELECT priority, implementation_state 
     FROM actions 
     WHERE actor_id = ?
   `).all(actorId) as { priority: string; implementation_state: string }[];
 
-  const health = calculateHealth(actions);
-  return { score: health.score, actionCount: health.totalActions };
+  return calculateHealth(actions);
 }
 
 export const getAllActors = (_req: Request, res: Response): void => {
   const actors = db.prepare('SELECT * FROM actors ORDER BY name').all() as any[];
   
   const actorsWithSatisfaction: ActorWithSatisfaction[] = actors.map(actor => {
-    const { score, actionCount } = getSatisfaction(actor.id);
+    const health = getHealthData(actor.id);
     return {
       ...actor,
-      satisfaction: score,
-      action_count: actionCount
+      satisfaction: health.score,
+      action_count: health.totalActions,
+      health
     };
   });
   
@@ -47,11 +48,12 @@ export const getActorById = (req: Request, res: Response): void => {
   }
 
   const actorId = Number(req.params.id);
-  const { score, actionCount } = getSatisfaction(actorId);
+  const health = getHealthData(actorId);
   const actorWithSatisfaction: ActorWithSatisfaction = {
     ...actor,
-    satisfaction: score,
-    action_count: actionCount
+    satisfaction: health.score,
+    action_count: health.totalActions,
+    health
   };
   
   res.json(actorWithSatisfaction);
@@ -69,10 +71,12 @@ export const createActor = (req: Request, res: Response): void => {
   const result = stmt.run(uid, name, description || null);
   const actor = db.prepare('SELECT * FROM actors WHERE id = ?').get(result.lastInsertRowid);
   
+  const health = getHealthData(Number(result.lastInsertRowid));
   const actorWithSatisfaction: ActorWithSatisfaction = {
     ...actor,
-    satisfaction: 0,
-    action_count: 0
+    satisfaction: health.score,
+    action_count: health.totalActions,
+    health
   };
   res.status(201).json(actorWithSatisfaction);
 };
@@ -91,11 +95,12 @@ export const updateActor = (req: Request, res: Response): void => {
   const actor = db.prepare('SELECT * FROM actors WHERE id = ?').get(req.params.id);
   
   const actorId = Number(req.params.id);
-  const { score, actionCount } = getSatisfaction(actorId);
+  const health = getHealthData(actorId);
   const actorWithSatisfaction: ActorWithSatisfaction = {
     ...actor,
-    satisfaction: score,
-    action_count: actionCount
+    satisfaction: health.score,
+    action_count: health.totalActions,
+    health
   };
   res.json(actorWithSatisfaction);
 };

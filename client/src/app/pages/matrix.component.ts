@@ -686,7 +686,10 @@ export class MatrixComponent implements OnInit, OnChanges {
     if (!this.actorId) return;
     
     this.actorService.getById(this.actorId).subscribe({
-      next: (actor) => this.currentActor = actor,
+      next: (actor) => {
+        this.currentActor = actor;
+        this.health = actor.health || null;
+      },
       error: (err) => console.error('Error loading actor:', err)
     });
     
@@ -719,6 +722,7 @@ export class MatrixComponent implements OnInit, OnChanges {
     this.mapService.getById(this.mapId).subscribe({
       next: (map) => {
         this.currentMap = map;
+        this.health = map.health || null;
       },
       error: (err) => console.error('Error loading map:', err)
     });
@@ -899,99 +903,11 @@ export class MatrixComponent implements OnInit, OnChanges {
   }
 
   get hasHealthData(): boolean {
-    return this.health !== null || (this.viewMode === 'actor' && this.actions.length > 0);
+    return this.health !== null;
   }
 
   get displayHealth(): MapHealth | null {
-    if (this.health !== null) {
-      return this.health;
-    }
-    if (this.viewMode === 'actor' && this.actions.length > 0) {
-      return this.calculateHealthFromActions();
-    }
-    return null;
-  }
-
-  private calculateHealthFromActions(): MapHealth {
-    const priorityWeights: Record<string, number> = {
-      'Need': 3,
-      'Want': 2,
-      'Nice': 1
-    };
-    const implWeights: Record<string, number> = {
-      'Full': 1.0,
-      'Partial': 0.5,
-      'None': 0.0
-    };
-
-    const defaultPriorityResult = { full: 0, partial: 0, none: 0, total: 0, score: 0 };
-    const health: MapHealth = {
-      score: 0,
-      totalActions: 0,
-      fullCount: 0,
-      partialCount: 0,
-      noneCount: 0,
-      byPriority: {
-        Need: { ...defaultPriorityResult },
-        Want: { ...defaultPriorityResult },
-        Nice: { ...defaultPriorityResult }
-      }
-    };
-
-    if (this.actions.length === 0) {
-      return health;
-    }
-
-    health.totalActions = this.actions.length;
-
-    let totalWeight = 0;
-    let weightedScore = 0;
-
-    for (const action of this.actions) {
-      const priorityWeight = priorityWeights[action.priority] || 1;
-      const implWeight = implWeights[action.implementation_state] || 0;
-      
-      totalWeight += priorityWeight;
-      weightedScore += priorityWeight * implWeight;
-
-      const priority = action.priority as keyof typeof health.byPriority;
-      if (health.byPriority[priority]) {
-        health.byPriority[priority].total++;
-        
-        switch (action.implementation_state) {
-          case 'Full':
-            health.fullCount++;
-            health.byPriority[priority].full++;
-            break;
-          case 'Partial':
-            health.partialCount++;
-            health.byPriority[priority].partial++;
-            break;
-          case 'None':
-            health.noneCount++;
-            health.byPriority[priority].none++;
-            break;
-        }
-      }
-    }
-
-    if (totalWeight > 0) {
-      health.score = Math.round((weightedScore / totalWeight) * 100);
-    }
-
-    for (const priority of ['Need', 'Want', 'Nice'] as const) {
-      const p = health.byPriority[priority];
-      if (p.total > 0) {
-        let pWeight = 0;
-        pWeight += p.full * 1;
-        pWeight += p.partial * 0.5;
-        pWeight += p.none * 0;
-        const pScore = (pWeight / p.total) * 100;
-        p.score = Math.round(pScore);
-      }
-    }
-
-    return health;
+    return this.health;
   }
 
   getScoreClass(score: number | undefined): string {

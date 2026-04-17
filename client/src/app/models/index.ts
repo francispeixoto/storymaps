@@ -44,6 +44,7 @@ export interface Actor {
   updated_at: string;
   satisfaction?: number;
   action_count?: number;
+  health?: MapHealth;
 }
 
 export interface Activity {

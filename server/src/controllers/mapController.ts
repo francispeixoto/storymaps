@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import db from '../models/db';
+import { calculateHealth, MapHealth } from '../utils/health';
 
 export const getAllMaps = (_req: Request, res: Response): void => {
   const maps = db.prepare('SELECT * FROM maps ORDER BY created_at DESC').all();
@@ -12,7 +13,16 @@ export const getMapById = (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Map not found' });
     return;
   }
-  res.json(map);
+
+  const actions = db.prepare(`
+    SELECT a.priority, a.implementation_state
+    FROM actions a
+    JOIN activities act ON a.activity_id = act.id
+    WHERE act.map_id = ?
+  `).all(req.params.id) as { priority: string; implementation_state: string }[];
+
+  const health: MapHealth = calculateHealth(actions);
+  res.json({ ...map, health });
 };
 
 export const createMap = (req: Request, res: Response): void => {
