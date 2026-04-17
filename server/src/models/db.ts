@@ -127,6 +127,58 @@ export function initDatabase(): void {
     // Ignore migration errors
   }
 
+  // Migration: add contexts table and context_maps junction table
+  try {
+    const hasContextsTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='contexts'").get();
+    if (!hasContextsTable) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS contexts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          uid TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          is_default INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+    const hasContextMapsTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='context_maps'").get();
+    if (!hasContextMapsTable) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS context_maps (
+          context_id INTEGER NOT NULL,
+          map_id INTEGER NOT NULL,
+          PRIMARY KEY (context_id, map_id),
+          FOREIGN KEY (context_id) REFERENCES contexts(id) ON DELETE CASCADE,
+          FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
+        )
+      `);
+      db.exec('CREATE INDEX IF NOT EXISTS idx_context_maps_context_id ON context_maps(context_id)');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_context_maps_map_id ON context_maps(map_id)');
+    }
+    // Create default context if none exists
+    const contextCount = db.prepare("SELECT COUNT(*) as count FROM contexts").get() as { count: number };
+    if (contextCount.count === 0) {
+      db.prepare('INSERT INTO contexts (uid, name, is_default) VALUES (?, ?, ?)').run(
+        `default-${Date.now()}`,
+        'Default',
+        1
+      );
+      // Assign all existing maps to the default context
+      const maps = db.prepare('SELECT id FROM maps').all() as { id: number }[];
+      const defaultContext = db.prepare('SELECT id FROM contexts WHERE is_default = 1').get() as { id: number };
+      if (defaultContext && maps.length > 0) {
+        const insertStmt = db.prepare('INSERT INTO context_maps (context_id, map_id) VALUES (?, ?)');
+        maps.forEach(map => {
+          insertStmt.run(defaultContext.id, map.id);
+        });
+      }
+    }
+  } catch (e) {
+    console.error('Migration error for contexts:', e);
+  }
+
   console.log('Database initialized');
 }
 

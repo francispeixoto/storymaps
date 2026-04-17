@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -505,6 +505,9 @@ interface DropdownOption {
   `
 })
 export class MatrixComponent implements OnInit {
+  @Input() contextId: number | null = null;
+  @Input() mapId: number | null = null;
+  
   viewMode: ViewMode = 'map';
   currentMap: Map | null = null;
   currentActor: Actor | null = null;
@@ -554,7 +557,6 @@ export class MatrixComponent implements OnInit {
   actionDependencies: ActionDependency[] = [];
   actionPrerequisitesOf: ActionWithContext[] = [];
   
-  mapId: number | null = null;
   actorId: number | null = null;
 
   constructor(
@@ -618,7 +620,13 @@ export class MatrixComponent implements OnInit {
   detectViewMode(): void {
     const url = this.router.url;
     
-    if (url.includes('/actors/')) {
+    if (this.contextId !== null) {
+      this.viewMode = 'map';
+      this.loadMapData();
+    } else if (this.mapId !== null) {
+      this.viewMode = 'map';
+      this.loadMapData();
+    } else if (url.includes('/actors/')) {
       this.viewMode = 'actor';
       this.route.params.subscribe(params => {
         if (params['id']) {

@@ -1,0 +1,16 @@
+meta {
+  name: Create Context
+  type: http
+  version: 1.0.0
+}
+
+post {{baseUrl}}/api/contexts {
+  body {
+    uid: "context-{{timestamp}}"
+    name: "Test Context"
+    description: "A test context"
+  }
+  response {
+    status: 201
+  }
+}

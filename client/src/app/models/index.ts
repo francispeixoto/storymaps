@@ -7,6 +7,21 @@ export interface Map {
   updated_at: string;
 }
 
+export interface Context {
+  id: number;
+  uid: string;
+  name: string;
+  description?: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+  map_count?: number;
+}
+
+export interface ContextWithMaps extends Context {
+  maps: Map[];
+}
+
 export interface Actor {
   id: number;
   uid: string;

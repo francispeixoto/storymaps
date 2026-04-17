@@ -6,6 +6,7 @@ import mapRoutes from './routes/mapRoutes';
 import activityRoutes from './routes/activityRoutes';
 import actionRoutes from './routes/actionRoutes';
 import actorRoutes from './routes/actorRoutes';
+import contextRoutes from './routes/contextRoutes';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -16,6 +17,7 @@ app.use(express.json());
 
 initDatabase();
 
+app.use('/api/contexts', contextRoutes);
 app.use('/api/maps', mapRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/actions', actionRoutes);

@@ -34,7 +34,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ConfirmDeleteDialogComponent {
   @Input() itemName: string = '';
-  @Input() itemType: 'activity' | 'action' | 'map' | 'actor' = 'action';
+  @Input() itemType: 'activity' | 'action' | 'map' | 'actor' | 'context' = 'action';
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 }
