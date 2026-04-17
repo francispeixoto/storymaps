@@ -161,7 +161,7 @@ import { Context, Map } from '../models';
                 </tbody>
               </table>
             </div>
-            <app-matrix [mapId]="map.id"></app-matrix>
+            <app-matrix [mapId]="map.id" (dataChanged)="onDataChanged()"></app-matrix>
           </div>
         </div>
       </div>
@@ -238,6 +238,13 @@ export class ContextDetailComponent implements OnInit {
   getPriorityProgress(priorityStats: { full: number; partial: number; none: number; total: number; score: number }): number {
     if (priorityStats.total === 0) return 0;
     return priorityStats.score;
+  }
+
+  onDataChanged(): void {
+    if (!this.context) return;
+    const previousExpandedId = this.expandedMapId;
+    this.loadContext(this.context.id);
+    this.expandedMapId = previousExpandedId;
   }
 
   onMapAdded(mapId: number): void {

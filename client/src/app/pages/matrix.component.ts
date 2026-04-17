@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -507,6 +507,7 @@ interface DropdownOption {
 export class MatrixComponent implements OnInit, OnChanges {
   @Input() contextId: number | null = null;
   @Input() mapId: number | null = null;
+  @Output() dataChanged = new EventEmitter<void>();
   
   viewMode: ViewMode = 'map';
   currentMap: Map | null = null;
@@ -1032,6 +1033,7 @@ export class MatrixComponent implements OnInit, OnChanges {
         this.activityForm.reset();
         this.showAddActivityModal = false;
         this.toastService.showSuccess(`Activity '${name}' added successfully`);
+        this.dataChanged.emit();
       },
       error: (err) => {
         console.error('Error adding activity:', err);
@@ -1099,6 +1101,7 @@ export class MatrixComponent implements OnInit, OnChanges {
         this.showAddActionModal = false;
         this.addActionToActivityId = null;
         this.toastService.showSuccess(`Action '${name}' added successfully`);
+        this.dataChanged.emit();
       },
       error: (err) => {
         console.error('Error adding action:', err);
@@ -1153,6 +1156,7 @@ export class MatrixComponent implements OnInit, OnChanges {
         this.showActionModal = false;
         this.editingActionId = null;
         this.toastService.showSuccess(`Action '${name}' updated successfully`);
+        this.dataChanged.emit();
       },
       error: (err) => {
         console.error('Error updating action:', err);
@@ -1185,6 +1189,7 @@ export class MatrixComponent implements OnInit, OnChanges {
           this.loadActions();
           this.closeDeleteDialog();
           this.toastService.showSuccess(`Activity '${itemName}' deleted successfully`);
+          this.dataChanged.emit();
         },
         error: (err) => {
           console.error('Error deleting activity:', err);
@@ -1211,6 +1216,7 @@ export class MatrixComponent implements OnInit, OnChanges {
           this.loadActions();
           this.closeDeleteDialog();
           this.toastService.showSuccess(`Action '${itemName}' deleted successfully`);
+          this.dataChanged.emit();
         },
         error: (err) => {
           console.error('Error deleting action:', err);
