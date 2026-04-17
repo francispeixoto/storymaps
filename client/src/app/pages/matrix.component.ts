@@ -1020,6 +1020,7 @@ export class MatrixComponent implements OnInit {
       map_id: this.mapId
     }).subscribe({
       next: () => {
+        this.loadMapActivities();
         this.loadActions();
         this.activityForm.reset();
         this.showAddActivityModal = false;
