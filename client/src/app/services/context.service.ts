@@ -21,7 +21,7 @@ export class ContextService {
   }
 
   getWithMaps(id: number): Observable<ContextWithMaps> {
-    return this.http.get<ContextWithMaps>(`${this.apiUrl}/${id}`);
+    return this.http.get<ContextWithMaps>(`${this.apiUrl}/${id}/full`);
   }
 
   create(context: Partial<Context>): Observable<Context> {

@@ -5,6 +5,7 @@ const router = Router();
 
 router.get('/', contextController.getAllContexts);
 router.get('/:id', contextController.getContextById);
+router.get('/:id/full', contextController.getContextWithMaps);
 router.post('/', contextController.createContext);
 router.put('/:id', contextController.updateContext);
 router.delete('/:id', contextController.deleteContext);
