@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import db from '../models/db';
+import { calculateHealth, MapHealth } from '../utils/health';
 
 export const getAllContexts = (_req: Request, res: Response): void => {
   const contexts = db.prepare(`
@@ -38,9 +39,31 @@ export const getContextWithMaps = (req: Request, res: Response): void => {
     JOIN context_maps cm ON m.id = cm.map_id
     WHERE cm.context_id = ?
     ORDER BY m.name
-  `).all(req.params.id);
+  `).all(req.params.id) as any[];
 
-  res.json({ ...context, maps });
+  const mapsWithHealth = maps.map(map => {
+    const actions = db.prepare(`
+      SELECT a.priority, a.implementation_state
+      FROM actions a
+      JOIN activities act ON a.activity_id = act.id
+      WHERE act.map_id = ?
+    `).all(map.id) as { priority: string; implementation_state: string }[];
+    
+    const health: MapHealth = calculateHealth(actions);
+    return { ...map, health };
+  });
+
+  const allActions = db.prepare(`
+    SELECT a.priority, a.implementation_state
+    FROM actions a
+    JOIN activities act ON a.activity_id = act.id
+    JOIN context_maps cm ON act.map_id = cm.map_id
+    WHERE cm.context_id = ?
+  `).all(req.params.id) as { priority: string; implementation_state: string }[];
+
+  const contextHealth: MapHealth = calculateHealth(allActions);
+
+  res.json({ ...context, maps: mapsWithHealth, health: contextHealth });
 };
 
 export const createContext = (req: Request, res: Response): void => {
@@ -98,8 +121,21 @@ export const getContextMaps = (req: Request, res: Response): void => {
     JOIN context_maps cm ON m.id = cm.map_id
     WHERE cm.context_id = ?
     ORDER BY m.name
-  `).all(req.params.id);
-  res.json(maps);
+  `).all(req.params.id) as any[];
+
+  const mapsWithHealth = maps.map(map => {
+    const actions = db.prepare(`
+      SELECT a.priority, a.implementation_state
+      FROM actions a
+      JOIN activities act ON a.activity_id = act.id
+      WHERE act.map_id = ?
+    `).all(map.id) as { priority: string; implementation_state: string }[];
+    
+    const health: MapHealth = calculateHealth(actions);
+    return { ...map, health };
+  });
+
+  res.json(mapsWithHealth);
 };
 
 export const addMapToContext = (req: Request, res: Response): void => {

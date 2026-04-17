@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import db from '../models/db';
+import { calculateHealth } from '../utils/health';
 
 interface ActorWithSatisfaction {
   id: number;
@@ -12,51 +13,22 @@ interface ActorWithSatisfaction {
   action_count: number;
 }
 
-function calculateSatisfaction(actorId: number): { score: number; actionCount: number } {
+function getSatisfaction(actorId: number): { score: number; actionCount: number } {
   const actions = db.prepare(`
     SELECT priority, implementation_state 
     FROM actions 
     WHERE actor_id = ?
   `).all(actorId) as { priority: string; implementation_state: string }[];
 
-  if (actions.length === 0) {
-    return { score: 0, actionCount: 0 };
-  }
-
-  const priorityWeights: Record<string, number> = {
-    'Need': 3,
-    'Want': 2,
-    'Nice': 1
-  };
-
-  let totalWeight = 0;
-  let promotersWeight = 0;
-  let detractorsWeight = 0;
-
-  for (const action of actions) {
-    const weight = priorityWeights[action.priority] || 1;
-    totalWeight += weight;
-
-    if (action.implementation_state === 'Full') {
-      promotersWeight += weight;
-    } else if (action.implementation_state === 'None') {
-      detractorsWeight += weight;
-    }
-  }
-
-  if (totalWeight === 0) {
-    return { score: 0, actionCount: actions.length };
-  }
-
-  const score = ((promotersWeight / totalWeight) - (detractorsWeight / totalWeight)) * 100;
-  return { score: Math.round(score), actionCount: actions.length };
+  const health = calculateHealth(actions);
+  return { score: health.score, actionCount: health.totalActions };
 }
 
 export const getAllActors = (_req: Request, res: Response): void => {
   const actors = db.prepare('SELECT * FROM actors ORDER BY name').all() as any[];
   
   const actorsWithSatisfaction: ActorWithSatisfaction[] = actors.map(actor => {
-    const { score, actionCount } = calculateSatisfaction(actor.id);
+    const { score, actionCount } = getSatisfaction(actor.id);
     return {
       ...actor,
       satisfaction: score,
@@ -75,7 +47,7 @@ export const getActorById = (req: Request, res: Response): void => {
   }
 
   const actorId = Number(req.params.id);
-  const { score, actionCount } = calculateSatisfaction(actorId);
+  const { score, actionCount } = getSatisfaction(actorId);
   const actorWithSatisfaction: ActorWithSatisfaction = {
     ...actor,
     satisfaction: score,
@@ -119,7 +91,7 @@ export const updateActor = (req: Request, res: Response): void => {
   const actor = db.prepare('SELECT * FROM actors WHERE id = ?').get(req.params.id);
   
   const actorId = Number(req.params.id);
-  const { score, actionCount } = calculateSatisfaction(actorId);
+  const { score, actionCount } = getSatisfaction(actorId);
   const actorWithSatisfaction: ActorWithSatisfaction = {
     ...actor,
     satisfaction: score,

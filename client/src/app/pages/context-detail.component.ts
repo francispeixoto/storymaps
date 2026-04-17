@@ -39,6 +39,34 @@ import { Context, Map } from '../models';
         </div>
       </div>
 
+      <div *ngIf="context.health && context.health.totalActions > 0" class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <div class="flex items-center justify-between mb-3">
+          <span class="font-medium text-indigo-900">Context Health</span>
+          <span [class]="getScoreClass(context.health.score) + ' text-lg font-bold'">
+            {{ context.health.score }}
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-3">
+          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white rounded p-2">
+            <div class="text-xs text-gray-500 mb-1">{{ priority }}</div>
+            <div class="flex items-center gap-1 text-xs">
+              <span class="text-green-600">{{ context.health.byPriority[priority].full }}F</span>
+              <span class="text-yellow-600">{{ context.health.byPriority[priority].partial }}P</span>
+              <span class="text-red-600">{{ context.health.byPriority[priority].none }}N</span>
+            </div>
+            <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
+              <div 
+                class="h-full bg-indigo-500 transition-all"
+                [style.width.%]="getPriorityProgress(context.health.byPriority[priority])"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-xs text-gray-600">
+          Overall: {{ context.health.fullCount }} Full / {{ context.health.partialCount }} Partial / {{ context.health.noneCount }} None ({{ context.health.totalActions }} total)
+        </div>
+      </div>
+
       <div class="mb-4">
         <button
           (click)="showMapSelector = true"
@@ -64,10 +92,15 @@ import { Context, Map } from '../models';
             class="flex justify-between items-center px-4 py-3 bg-gray-50 cursor-pointer"
             (click)="toggleMapExpanded(map.id)"
           >
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
               <span class="text-gray-400">{{ expandedMapId === map.id ? '▼' : '▶' }}</span>
               <h3 class="font-medium">{{ map.name }}</h3>
-              <span class="text-sm text-gray-500">{{ getMapActionCount(map.id) }} actions</span>
+              <span [class]="getScoreClass(map.health?.score)" class="font-medium">
+                {{ map.health?.score || 0 }}
+              </span>
+              <span class="text-xs text-gray-500">
+                {{ map.health?.fullCount || 0 }}F / {{ map.health?.partialCount || 0 }}P / {{ map.health?.noneCount || 0 }}N
+              </span>
             </div>
             <button
               (click)="removeMap(map); $event.stopPropagation()"
@@ -80,6 +113,54 @@ import { Context, Map } from '../models';
             </button>
           </div>
           <div *ngIf="expandedMapId === map.id" class="p-4">
+            <div *ngIf="map.health && map.health.totalActions > 0" class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">Implementation by Priority</h4>
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-gray-500 text-xs">
+                    <th class="pb-2">Priority</th>
+                    <th class="pb-2">Full</th>
+                    <th class="pb-2">Partial</th>
+                    <th class="pb-2">None</th>
+                    <th class="pb-2 w-32">Progress</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let priority of ['Need', 'Want', 'Nice']" class="border-t border-gray-200">
+                    <td class="py-2 font-medium">{{ priority }}</td>
+                    <td class="py-2">
+                      <span *ngIf="map.health!.byPriority[priority].full > 0" class="text-green-600">
+                        {{ map.health!.byPriority[priority].full }}
+                      </span>
+                      <span *ngIf="map.health!.byPriority[priority].full === 0" class="text-gray-400">-</span>
+                    </td>
+                    <td class="py-2">
+                      <span *ngIf="map.health!.byPriority[priority].partial > 0" class="text-yellow-600">
+                        {{ map.health!.byPriority[priority].partial }}
+                      </span>
+                      <span *ngIf="map.health!.byPriority[priority].partial === 0" class="text-gray-400">-</span>
+                    </td>
+                    <td class="py-2">
+                      <span *ngIf="map.health!.byPriority[priority].none > 0" class="text-red-600">
+                        {{ map.health!.byPriority[priority].none }}
+                      </span>
+                      <span *ngIf="map.health!.byPriority[priority].none === 0" class="text-gray-400">-</span>
+                    </td>
+                    <td class="py-2">
+                      <div class="flex items-center gap-2">
+                        <div class="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
+                          <div 
+                            class="h-full bg-indigo-500 transition-all"
+                            [style.width.%]="getPriorityProgress(map.health!.byPriority[priority])"
+                          ></div>
+                        </div>
+                        <span class="text-xs text-gray-500 w-8">{{ map.health!.byPriority[priority].score }}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <app-matrix [mapId]="map.id"></app-matrix>
           </div>
         </div>
@@ -131,7 +212,7 @@ export class ContextDetailComponent implements OnInit {
       next: (context) => {
         this.context = context;
         this.maps = context.maps || [];
-        if (this.maps.length > 0) {
+        if (this.maps.length > 0 && this.expandedMapId === null) {
           this.expandedMapId = this.maps[0].id;
         }
       },
@@ -146,8 +227,17 @@ export class ContextDetailComponent implements OnInit {
     this.expandedMapId = this.expandedMapId === mapId ? null : mapId;
   }
 
-  getMapActionCount(mapId: number): number {
-    return 0;
+  getScoreClass(score: number | undefined): string {
+    if (score === undefined || score === null) return 'text-gray-500';
+    if (score >= 75) return 'text-green-600';
+    if (score >= 50) return 'text-yellow-600';
+    if (score >= 25) return 'text-orange-500';
+    return 'text-red-600';
+  }
+
+  getPriorityProgress(priorityStats: { full: number; partial: number; none: number; total: number; score: number }): number {
+    if (priorityStats.total === 0) return 0;
+    return priorityStats.score;
   }
 
   onMapAdded(mapId: number): void {

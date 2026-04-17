@@ -5,6 +5,19 @@ export interface Map {
   description?: string;
   created_at: string;
   updated_at: string;
+  health?: MapHealth;
+}
+
+export interface MapHealth {
+  score: number;
+  category: 'Promoter' | 'Passive' | 'Detractor' | 'Empty';
+  totalActions: number;
+  fullCount: number;
+  partialCount: number;
+  noneCount: number;
+  byPriority: {
+    [key: string]: { full: number; partial: number; none: number; total: number; score: number };
+  };
 }
 
 export interface Context {
@@ -16,6 +29,7 @@ export interface Context {
   created_at: string;
   updated_at: string;
   map_count?: number;
+  health?: MapHealth;
 }
 
 export interface ContextWithMaps extends Context {
