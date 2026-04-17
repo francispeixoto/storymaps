@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +9,7 @@ import { ActionService } from '../services/action.service';
 import { ActivityService } from '../services/activity.service';
 import { ToastService } from '../services/toast.service';
 import { ConfirmDeleteDialogComponent } from '../components/confirm-delete-dialog.component';
-import { Map, Actor, Activity, Action, ActionDependency, ActionWithContext } from '../models';
+import { Map, Actor, Activity, Action, ActionDependency, ActionWithContext, MapHealth } from '../models';
 
 type ViewMode = 'map' | 'actor';
 
@@ -51,6 +51,34 @@ interface DropdownOption {
           >
             Back
           </button>
+        </div>
+      </div>
+
+      <div *ngIf="hasHealthData && displayHealth" class="max-w-full mx-auto mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <div class="flex items-center justify-between mb-3">
+          <span class="font-medium text-indigo-900">Implementation</span>
+          <span [class]="getScoreClass(displayHealth.score) + ' text-lg font-bold'">
+            {{ displayHealth.score }}
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-3">
+          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white rounded p-2">
+            <div class="text-xs text-gray-500 mb-1">{{ priority }}</div>
+            <div class="flex items-center gap-1 text-xs">
+              <span class="text-green-600">{{ displayHealth.byPriority[priority].full }}F</span>
+              <span class="text-yellow-600">{{ displayHealth.byPriority[priority].partial }}P</span>
+              <span class="text-red-600">{{ displayHealth.byPriority[priority].none }}N</span>
+            </div>
+            <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
+              <div 
+                class="h-full bg-indigo-500 transition-all"
+                [style.width.%]="getPriorityProgress(displayHealth.byPriority[priority])"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-xs text-gray-600">
+          Overall: {{ displayHealth.fullCount }} Full / {{ displayHealth.partialCount }} Partial / {{ displayHealth.noneCount }} None ({{ displayHealth.totalActions }} total)
         </div>
       </div>
 
@@ -157,11 +185,11 @@ interface DropdownOption {
         </div>
       </div>
 
-      <div *ngIf="filteredActions.length === 0" class="text-center py-8 text-gray-500">
-        No actions found matching the current filters.
+      <div *ngIf="uniqueActivities.length === 0" class="text-center py-8 text-gray-500">
+        No activities yet. Add an activity to get started.
       </div>
 
-      <div *ngIf="filteredActions.length > 0" class="matrix-container">
+      <div *ngIf="uniqueActivities.length > 0" class="mb-6 matrix-container">
         <div class="matrix-scroll-content">
           <table class="matrix-table">
             <thead class="matrix-thead">
@@ -505,14 +533,19 @@ interface DropdownOption {
     </div>
   `
 })
-export class MatrixComponent implements OnInit {
+export class MatrixComponent implements OnInit, OnChanges {
+  @Input() contextId: number | null = null;
+  @Input() mapId: number | null = null;
+  @Input() health: MapHealth | null = null;
+  @Output() dataChanged = new EventEmitter<void>();
+  
   viewMode: ViewMode = 'map';
   currentMap: Map | null = null;
   currentActor: Actor | null = null;
   
   actors: Actor[] = [];
   maps: Map[] = [];
-  activities: { id: number; name: string; description?: string; map_id: number }[] = [];
+  activities: Activity[] = [];
   actions: ActionWithContext[] = [];
   
   priorities = ['Need', 'Want', 'Nice'];
@@ -555,7 +588,6 @@ export class MatrixComponent implements OnInit {
   actionDependencies: ActionDependency[] = [];
   actionPrerequisitesOf: ActionWithContext[] = [];
   
-  mapId: number | null = null;
   actorId: number | null = null;
 
   constructor(
@@ -572,9 +604,16 @@ export class MatrixComponent implements OnInit {
   ngOnInit(): void {
     this.initForms();
     this.initStateOptions();
-    this.route.params.subscribe(params => {
-      this.detectViewMode();
-    });
+    this.detectViewMode();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['mapId'] && !changes['mapId'].firstChange) {
+      this.loadMapData();
+    }
+    if (changes['contextId'] && !changes['contextId'].firstChange) {
+      this.loadMapData();
+    }
   }
 
   initForms(): void {
@@ -619,7 +658,13 @@ export class MatrixComponent implements OnInit {
   detectViewMode(): void {
     const url = this.router.url;
     
-    if (url.includes('/actors/')) {
+    if (this.contextId !== null) {
+      this.viewMode = 'map';
+      this.loadMapData();
+    } else if (this.mapId !== null) {
+      this.viewMode = 'map';
+      this.loadMapData();
+    } else if (url.includes('/actors/')) {
       this.viewMode = 'actor';
       this.route.params.subscribe(params => {
         if (params['id']) {
@@ -642,7 +687,10 @@ export class MatrixComponent implements OnInit {
     if (!this.actorId) return;
     
     this.actorService.getById(this.actorId).subscribe({
-      next: (actor) => this.currentActor = actor,
+      next: (actor) => {
+        this.currentActor = actor;
+        this.health = actor.health || null;
+      },
       error: (err) => console.error('Error loading actor:', err)
     });
     
@@ -675,6 +723,7 @@ export class MatrixComponent implements OnInit {
     this.mapService.getById(this.mapId).subscribe({
       next: (map) => {
         this.currentMap = map;
+        this.health = map.health || null;
       },
       error: (err) => console.error('Error loading map:', err)
     });
@@ -708,32 +757,23 @@ export class MatrixComponent implements OnInit {
   }
 
   loadMapActivities(): void {
-    this.activities = [];
+    if (!this.mapId) return;
+    this.activityService.getAll(this.mapId).subscribe({
+      next: (activities) => {
+        this.activities = activities;
+      },
+      error: (err) => console.error('Error loading activities:', err)
+    });
   }
 
   loadActions(): void {
     this.actionService.getAllWithContext().subscribe({
       next: (actions) => {
         this.actions = actions;
-        this.extractActivities(actions);
         this.loadDependencyIndicators(actions);
       },
       error: (err) => console.error('Error loading actions:', err)
     });
-  }
-
-  extractActivities(actions: ActionWithContext[]): void {
-    const activityMap = new Map<number, { id: number; name: string; map_id: number }>();
-    for (const action of actions) {
-      if (action.activity_id && action.activity_name) {
-        activityMap.set(action.activity_id, {
-          id: action.activity_id,
-          name: action.activity_name,
-          map_id: action.map_id || 0
-        });
-      }
-    }
-    this.activities = Array.from(activityMap.values());
   }
 
   loadDependencyIndicators(actions: ActionWithContext[]): void {
@@ -808,20 +848,30 @@ export class MatrixComponent implements OnInit {
     });
   }
 
-  get uniqueActivities(): { id: number; name: string; description?: string }[] {
-    const activityMap = new Map<number, { id: number; name: string; description?: string }>();
-    for (const action of this.filteredActions) {
-      if (action.activity_id && action.activity_name) {
-        if (!activityMap.has(action.activity_id)) {
+  get uniqueActivities(): Activity[] {
+    if (this.activities.length > 0) {
+      return this.activities;
+    }
+    
+    if (this.viewMode === 'actor') {
+      const activityMap = new Map<number, Activity>();
+      for (const action of this.actions) {
+        if (action.activity_id && !activityMap.has(action.activity_id)) {
           activityMap.set(action.activity_id, {
             id: action.activity_id,
-            name: action.activity_name,
-            description: action.activity_description
+            uid: action.activity_uid || '',
+            name: action.activity_name || '',
+            description: action.activity_description,
+            map_id: action.map_id || 0,
+            created_at: '',
+            updated_at: ''
           });
         }
       }
+      return Array.from(activityMap.values());
     }
-    return Array.from(activityMap.values());
+    
+    return [];
   }
 
   get showActorFilter(): boolean {
@@ -849,10 +899,34 @@ export class MatrixComponent implements OnInit {
 
   get pageSubtitle(): string {
     if (this.viewMode === 'actor') {
+      const sat = this.displayHealth?.score;
       const count = this.currentActor?.action_count || 0;
+      if (sat !== undefined) {
+        return `Satisfaction: ${sat} • ${count} action${count !== 1 ? 's' : ''}`;
+      }
       return count > 0 ? `${count} action${count !== 1 ? 's' : ''}` : '';
     }
     return this.currentMap?.description || '';
+  }
+
+  get hasHealthData(): boolean {
+    return this.health !== null;
+  }
+
+  get displayHealth(): MapHealth | null {
+    return this.health;
+  }
+
+  getScoreClass(score: number | undefined): string {
+    if (score === undefined || score === null) return 'text-gray-500';
+    if (score >= 75) return 'text-green-600';
+    if (score >= 50) return 'text-yellow-600';
+    return 'text-red-600';
+  }
+
+  getPriorityProgress(priorityStats: { full: number; partial: number; none: number; total: number; score: number }): number {
+    if (priorityStats.total === 0) return 0;
+    return priorityStats.score;
   }
 
   toggleActorDropdown(): void {
@@ -1040,10 +1114,12 @@ export class MatrixComponent implements OnInit {
       map_id: this.mapId
     }).subscribe({
       next: () => {
+        this.loadMapActivities();
         this.loadActions();
         this.activityForm.reset();
         this.showAddActivityModal = false;
         this.toastService.showSuccess(`Activity '${name}' added successfully`);
+        this.dataChanged.emit();
       },
       error: (err) => {
         console.error('Error adding activity:', err);
@@ -1111,6 +1187,7 @@ export class MatrixComponent implements OnInit {
         this.showAddActionModal = false;
         this.addActionToActivityId = null;
         this.toastService.showSuccess(`Action '${name}' added successfully`);
+        this.dataChanged.emit();
       },
       error: (err) => {
         console.error('Error adding action:', err);
@@ -1165,6 +1242,7 @@ export class MatrixComponent implements OnInit {
         this.showActionModal = false;
         this.editingActionId = null;
         this.toastService.showSuccess(`Action '${name}' updated successfully`);
+        this.dataChanged.emit();
       },
       error: (err) => {
         console.error('Error updating action:', err);
@@ -1193,9 +1271,11 @@ export class MatrixComponent implements OnInit {
     if (this.pendingDeleteItem.type === 'activity') {
       this.activityService.delete(this.pendingDeleteItem.id).subscribe({
         next: () => {
+          this.loadMapActivities();
           this.loadActions();
           this.closeDeleteDialog();
           this.toastService.showSuccess(`Activity '${itemName}' deleted successfully`);
+          this.dataChanged.emit();
         },
         error: (err) => {
           console.error('Error deleting activity:', err);
@@ -1222,6 +1302,7 @@ export class MatrixComponent implements OnInit {
           this.loadActions();
           this.closeDeleteDialog();
           this.toastService.showSuccess(`Action '${itemName}' deleted successfully`);
+          this.dataChanged.emit();
         },
         error: (err) => {
           console.error('Error deleting action:', err);

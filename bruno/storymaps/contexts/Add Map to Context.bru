@@ -1,0 +1,14 @@
+meta {
+  name: Add Map to Context
+  type: http
+  version: 1.0.0
+}
+
+post {{baseUrl}}/api/contexts/1/maps {
+  body {
+    mapId: 1
+  }
+  response {
+    status: 201
+  }
+}

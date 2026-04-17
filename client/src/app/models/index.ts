@@ -5,6 +5,34 @@ export interface Map {
   description?: string;
   created_at: string;
   updated_at: string;
+  health?: MapHealth;
+}
+
+export interface MapHealth {
+  score: number;
+  totalActions: number;
+  fullCount: number;
+  partialCount: number;
+  noneCount: number;
+  byPriority: {
+    [key: string]: { full: number; partial: number; none: number; total: number; score: number };
+  };
+}
+
+export interface Context {
+  id: number;
+  uid: string;
+  name: string;
+  description?: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+  map_count?: number;
+  health?: MapHealth;
+}
+
+export interface ContextWithMaps extends Context {
+  maps: Map[];
 }
 
 export interface Actor {
@@ -16,6 +44,7 @@ export interface Actor {
   updated_at: string;
   satisfaction?: number;
   action_count?: number;
+  health?: MapHealth;
 }
 
 export interface Activity {

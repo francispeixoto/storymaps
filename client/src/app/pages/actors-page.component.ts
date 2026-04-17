@@ -22,9 +22,9 @@ import { Actor } from '../models';
 
       <div *ngIf="actors.length > 0" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-gray-700">Global Satisfaction:</span>
-          <span [class]="getSatisfactionClass(globalSatisfaction)">
-            {{ globalSatisfaction }} - {{ getSatisfactionCategory(globalSatisfaction) }}
+          <span class="text-sm font-medium text-gray-700">Overall Implementation:</span>
+          <span [class]="getScoreClass(globalSatisfaction)">
+            {{ globalSatisfaction }} - {{ getImplementationLabel(globalSatisfaction) }}
           </span>
         </div>
       </div>
@@ -44,9 +44,9 @@ import { Actor } from '../models';
               <h3 class="text-lg font-medium text-gray-900">{{ actor.name }}</h3>
               <p *ngIf="actor.description" class="mt-1 text-sm text-gray-500">{{ actor.description }}</p>
             </div>
-            <div *ngIf="actor.action_count && actor.action_count > 0" [class]="getSatisfactionClass(actor.satisfaction)">
+            <div *ngIf="actor.action_count && actor.action_count > 0" [class]="getScoreClass(actor.satisfaction)">
               <span class="text-lg font-bold">{{ actor.satisfaction }}</span>
-              <span class="text-xs ml-1">{{ getSatisfactionCategory(actor.satisfaction) }}</span>
+              <span class="text-xs ml-1">{{ getImplementationLabel(actor.satisfaction) }}</span>
             </div>
           </div>
           <p class="mt-2 text-xs text-gray-400">UID: {{ actor.uid }}</p>
@@ -88,17 +88,17 @@ export class ActorsPageComponent implements OnInit {
     this.globalSatisfaction = Math.round(sum / actorsWithActions.length);
   }
 
-  getSatisfactionClass(score: number | undefined): string {
+  getScoreClass(score: number | undefined): string {
     if (score === undefined) return 'text-gray-500';
-    if (score >= 50) return 'text-green-600';
-    if (score >= 0) return 'text-yellow-600';
+    if (score >= 75) return 'text-green-600';
+    if (score >= 50) return 'text-yellow-600';
     return 'text-red-600';
   }
 
-  getSatisfactionCategory(score: number | undefined): string {
+  getImplementationLabel(score: number | undefined): string {
     if (score === undefined) return 'N/A';
-    if (score >= 50) return 'Promoter';
-    if (score >= 0) return 'Passive';
-    return 'Detractor';
+    if (score >= 75) return 'Well Implemented';
+    if (score >= 50) return 'Partially Implemented';
+    return 'Needs Work';
   }
 }

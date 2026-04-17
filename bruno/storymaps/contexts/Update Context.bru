@@ -1,0 +1,15 @@
+meta {
+  name: Update Context
+  type: http
+  version: 1.0.0
+}
+
+put {{baseUrl}}/api/contexts/1 {
+  body {
+    name: "Updated Context Name"
+    description: "Updated description"
+  }
+  response {
+    status: 200
+  }
+}

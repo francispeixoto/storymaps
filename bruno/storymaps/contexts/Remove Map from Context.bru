@@ -1,0 +1,11 @@
+meta {
+  name: Remove Map from Context
+  type: http
+  version: 1.0.0
+}
+
+delete {{baseUrl}}/api/contexts/1/maps/1 {
+  response {
+    status: 204
+  }
+}
