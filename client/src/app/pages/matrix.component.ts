@@ -53,6 +53,34 @@ interface DropdownOption {
         </div>
       </div>
 
+      <div *ngIf="hasHealthData && displayHealth" class="max-w-full mx-auto mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <div class="flex items-center justify-between mb-3">
+          <span class="font-medium text-indigo-900">{{ viewMode === 'actor' ? 'Satisfaction' : 'Implementation' }}</span>
+          <span [class]="getScoreClass(displayHealth.score) + ' text-lg font-bold'">
+            {{ displayHealth.score }}
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-3">
+          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white rounded p-2">
+            <div class="text-xs text-gray-500 mb-1">{{ priority }}</div>
+            <div class="flex items-center gap-1 text-xs">
+              <span class="text-green-600">{{ displayHealth.byPriority[priority].full }}F</span>
+              <span class="text-yellow-600">{{ displayHealth.byPriority[priority].partial }}P</span>
+              <span class="text-red-600">{{ displayHealth.byPriority[priority].none }}N</span>
+            </div>
+            <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
+              <div 
+                class="h-full bg-indigo-500 transition-all"
+                [style.width.%]="getPriorityProgress(displayHealth.byPriority[priority])"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-xs text-gray-600">
+          Overall: {{ displayHealth.fullCount }} Full / {{ displayHealth.partialCount }} Partial / {{ displayHealth.noneCount }} None ({{ displayHealth.totalActions }} total)
+        </div>
+      </div>
+
       <div class="mb-4 flex flex-wrap items-start gap-6">
         <div *ngIf="showActorFilter" class="relative">
           <button
@@ -154,40 +182,13 @@ interface DropdownOption {
             </label>
           </div>
         </div>
-
-      <div *ngIf="hasHealthData && displayHealth" class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-        <div class="flex items-center justify-between mb-3">
-          <span class="font-medium text-indigo-900">{{ viewMode === 'actor' ? 'Satisfaction' : 'Implementation' }}</span>
-          <span [class]="getScoreClass(displayHealth.score) + ' text-lg font-bold'">
-            {{ displayHealth.score }}
-          </span>
-        </div>
-        <div class="grid grid-cols-3 gap-4 mb-3">
-          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white rounded p-2">
-            <div class="text-xs text-gray-500 mb-1">{{ priority }}</div>
-            <div class="flex items-center gap-1 text-xs">
-              <span class="text-green-600">{{ displayHealth.byPriority[priority].full }}F</span>
-              <span class="text-yellow-600">{{ displayHealth.byPriority[priority].partial }}P</span>
-              <span class="text-red-600">{{ displayHealth.byPriority[priority].none }}N</span>
-            </div>
-            <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
-              <div 
-                class="h-full bg-indigo-500 transition-all"
-                [style.width.%]="getPriorityProgress(displayHealth.byPriority[priority])"
-              ></div>
-            </div>
-          </div>
-        </div>
-        <div class="text-xs text-gray-600">
-          Overall: {{ displayHealth.fullCount }} Full / {{ displayHealth.partialCount }} Partial / {{ displayHealth.noneCount }} None ({{ displayHealth.totalActions }} total)
-        </div>
       </div>
 
       <div *ngIf="uniqueActivities.length === 0" class="text-center py-8 text-gray-500">
         No activities yet. Add an activity to get started.
       </div>
 
-      <div *ngIf="uniqueActivities.length > 0" class="matrix-container">
+      <div *ngIf="uniqueActivities.length > 0" class="mb-6 matrix-container">
         <div class="matrix-scroll-content">
           <table class="matrix-table">
             <thead class="matrix-thead">
