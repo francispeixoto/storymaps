@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -504,7 +504,7 @@ interface DropdownOption {
     </div>
   `
 })
-export class MatrixComponent implements OnInit {
+export class MatrixComponent implements OnInit, OnChanges {
   @Input() contextId: number | null = null;
   @Input() mapId: number | null = null;
   
@@ -573,9 +573,16 @@ export class MatrixComponent implements OnInit {
   ngOnInit(): void {
     this.initForms();
     this.initStateOptions();
-    this.route.params.subscribe(params => {
-      this.detectViewMode();
-    });
+    this.detectViewMode();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['mapId'] && !changes['mapId'].firstChange) {
+      this.loadMapData();
+    }
+    if (changes['contextId'] && !changes['contextId'].firstChange) {
+      this.loadMapData();
+    }
   }
 
   initForms(): void {
