@@ -156,11 +156,11 @@ interface DropdownOption {
         </div>
       </div>
 
-      <div *ngIf="filteredActions.length === 0" class="text-center py-8 text-gray-500">
-        No actions found matching the current filters.
+      <div *ngIf="uniqueActivities.length === 0" class="text-center py-8 text-gray-500">
+        No activities yet. Add an activity to get started.
       </div>
 
-      <div *ngIf="filteredActions.length > 0" class="matrix-container">
+      <div *ngIf="uniqueActivities.length > 0" class="matrix-container">
         <div class="matrix-scroll-content">
           <table class="matrix-table">
             <thead class="matrix-thead">
@@ -1181,6 +1181,7 @@ export class MatrixComponent implements OnInit, OnChanges {
     if (this.pendingDeleteItem.type === 'activity') {
       this.activityService.delete(this.pendingDeleteItem.id).subscribe({
         next: () => {
+          this.loadMapActivities();
           this.loadActions();
           this.closeDeleteDialog();
           this.toastService.showSuccess(`Activity '${itemName}' deleted successfully`);
