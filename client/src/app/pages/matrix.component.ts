@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, map } from 'rxjs';
 import { MapService } from '../services/map.service';
 import { ActorService } from '../services/actor.service';
 import { ActionService } from '../services/action.service';
@@ -739,24 +740,30 @@ export class MatrixComponent implements OnInit {
     this.inputsMap.clear();
     this.outputsMap.clear();
     
-    for (const action of actions) {
-      this.actionService.getDependencies(action.id).subscribe({
-        next: (deps) => {
-          if (deps.length > 0) {
-            this.inputsMap.set(action.id, true);
-          }
-        },
-        error: () => {}
-      });
-      this.actionService.getPrerequisitesOf(action.id).subscribe({
-        next: (preqs) => {
-          if (preqs.length > 0) {
-            this.outputsMap.set(action.id, true);
-          }
-        },
-        error: () => {}
-      });
-    }
+    if (actions.length === 0) return;
+    
+    const depRequests = actions.map(action => 
+      forkJoin({
+        deps: this.actionService.getDependencies(action.id),
+        preqs: this.actionService.getPrerequisitesOf(action.id)
+      }).pipe(
+        map(({ deps, preqs }) => ({
+          id: action.id,
+          hasDeps: deps.length > 0,
+          hasPreqs: preqs.length > 0
+        }))
+      )
+    );
+    
+    forkJoin(depRequests).subscribe({
+      next: (results) => {
+        results.forEach(r => {
+          if (r.hasDeps) this.inputsMap.set(r.id, true);
+          if (r.hasPreqs) this.outputsMap.set(r.id, true);
+        });
+      },
+      error: (err) => console.error('Error loading dependency indicators:', err)
+    });
   }
 
   get filteredActorOptions(): DropdownOption[] {
