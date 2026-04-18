@@ -19,6 +19,7 @@ npx tailwindcss init
 ```javascript
 module.exports = {
   content: ["./src/**/*.{html,ts}"],
+  darkMode: 'class',
   theme: {
     extend: {},
   },
@@ -31,6 +32,92 @@ module.exports = {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --text-primary: #111827;
+  /* ... other light theme variables */
+}
+
+.dark {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --text-primary: #f9fafb;
+  /* ... other dark theme variables */
+}
+```
+
+## Dark Mode
+
+StoryMaps implements a dark mode toggle using a CSS variables approach with Tailwind's class-based dark mode.
+
+### Approach
+
+1. **CSS Variables**: Theme colors defined in `:root` and `.dark` classes in `styles.css`
+2. **Tailwind Class**: `darkMode: 'class'` in `tailwind.config.js`
+3. **Toggle**: AppComponent manages state via localStorage and applies `.dark` class to `<html>`
+
+### CSS Variables
+
+Light theme (default):
+```css
+:root {
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --matrix-bg: #ffffff;
+  --action-card-bg: #f9fafb;
+}
+```
+
+Dark theme:
+```css
+.dark {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --matrix-bg: #1f2937;
+  --action-card-bg: #374151;
+}
+```
+
+### Component Integration
+
+Components use Tailwind's dark mode variants:
+```html
+<div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+  Content adapts based on .dark class on parent
+</div>
+```
+
+### Persistence
+
+Dark mode preference is stored in localStorage and applied on app load:
+
+```typescript
+// In AppComponent
+ngOnInit() {
+  const darkMode = localStorage.getItem('darkMode') === 'true';
+  if (darkMode) {
+    document.documentElement.classList.add('dark');
+  }
+}
+
+toggleDarkMode() {
+  document.documentElement.classList.toggle('dark');
+  localStorage.setItem('darkMode', 
+    document.documentElement.classList.contains('dark').toString()
+  );
+}
 ```
 
 ### Angular Structure
@@ -201,6 +288,10 @@ export class MapViewerComponent {}
 | Path | Component | Description |
 |------|-----------|-------------|
 | `/` | HomePageComponent | Map list with create button |
+| `/contexts` | ContextsPageComponent | Context list with health scores |
+| `/contexts/create` | ContextFormComponent | Create new context |
+| `/contexts/:id` | ContextDetailComponent | View context with maps |
+| `/contexts/:id/edit` | ContextFormComponent | Edit context |
 | `/actors` | ActorsPageComponent | Actor management list |
 | `/actors/create` | ActorFormComponent | Create new actor |
 | `/actors/:id` | ActorFormComponent | View actor |
@@ -295,6 +386,55 @@ export class ActorService {
   }
 }
 ```
+
+### ContextService
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class ContextService {
+  private apiUrl = '/api/contexts';
+
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<Context[]> {
+    return this.http.get<Context[]>(this.apiUrl);
+  }
+
+  getById(id: number): Observable<Context> {
+    return this.http.get<Context>(`${this.apiUrl}/${id}`);
+  }
+
+  getWithMaps(id: number): Observable<ContextWithMaps> {
+    return this.http.get<ContextWithMaps>(`${this.apiUrl}/${id}/full`);
+  }
+
+  create(context: Partial<Context>): Observable<Context> {
+    return this.http.post<Context>(this.apiUrl, context);
+  }
+
+  update(id: number, context: Partial<Context>): Observable<Context> {
+    return this.http.put<Context>(`${this.apiUrl}/${id}`, context);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getMaps(id: number): Observable<Map[]> {
+    return this.http.get<Map[]>(`${this.apiUrl}/${id}/maps`);
+  }
+
+  addMap(contextId: number, mapId: number): Observable<{context_id: number, map_id: number}> {
+    return this.http.post<{context_id: number, map_id: number}>(`${this.apiUrl}/${contextId}/maps`, { map_id: mapId });
+  }
+
+  removeMap(contextId: number, mapId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${contextId}/maps/${mapId}`);
+  }
+}
+```
+
+The ContextService returns contexts with health data computed server-side. Each context includes a `health` object with score, totalActions, and per-priority breakdown.
 
 ### Inline Actor Creation Modal
 

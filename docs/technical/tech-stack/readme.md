@@ -11,6 +11,15 @@ This section documents the technology choices and implementation details for Sto
 | Database | SQLite |
 | Containerization | Docker + Docker Compose |
 
+## Features
+
+- **Dark Mode**: CSS variables with Tailwind class-based dark mode toggle
+- **Contexts Layer**: Group maps by context (e.g., "Mobile App", "Web App")
+- **Health Metrics**: Priority-weighted implementation scores
+- **Matrix View**: Kanban-style visualization of actions by priority
+- **Actor Management**: Track actions by user/role
+- **Action Dependencies**: Manage prerequisites between actions
+
 ## Rationale
 
 ### Node.js Only

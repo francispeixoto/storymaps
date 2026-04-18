@@ -101,6 +101,43 @@ CREATE TABLE action_dependencies (
 - **depends_on_action_id**: The action being depended on
 - **Unique constraint**: Prevents duplicate dependencies
 
+### Contexts Table
+
+```sql
+CREATE TABLE contexts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_default INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+- **uid**: Unique identifier (e.g., 'context-001')
+- **name**: Context name (e.g., 'Shopping App', 'Mobile App')
+- **description**: Optional context description
+- **is_default**: Flag for default context (1 = default, 0 = not default)
+- **Timestamps**: Auto-managed creation and update times
+
+### Context Maps Junction Table
+
+```sql
+CREATE TABLE context_maps (
+    context_id INTEGER NOT NULL,
+    map_id INTEGER NOT NULL,
+    PRIMARY KEY (context_id, map_id),
+    FOREIGN KEY (context_id) REFERENCES contexts(id) ON DELETE CASCADE,
+    FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
+);
+```
+
+- **context_id**: Foreign key to context
+- **map_id**: Foreign key to map
+- **Primary key**: Composite key ensures unique context-map pairs
+- **Cascade**: Deleting context or map removes the association
+
 ### Indexes
 
 ```sql
@@ -115,6 +152,7 @@ CREATE INDEX idx_action_dependencies_action_id ON action_dependencies(action_id)
 ## Relationships
 
 ```
+contexts (1) ─────< context_maps (M) >───── (1) maps
 actors (1) ─────< actions (N)
 maps (1) ─────< activities (N)
 activities (1) ─────< actions (N)
@@ -138,6 +176,39 @@ CREATE TABLE IF NOT EXISTS actors (
 
 -- Add actor_id column to actions if missing
 ALTER TABLE actions ADD COLUMN actor_id INTEGER REFERENCES actors(id) ON DELETE SET NULL;
+```
+
+For existing databases, the following migration adds the contexts layer:
+
+```sql
+-- Create contexts table if missing
+CREATE TABLE IF NOT EXISTS contexts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_default INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create context_maps junction table if missing
+CREATE TABLE IF NOT EXISTS context_maps (
+    context_id INTEGER NOT NULL,
+    map_id INTEGER NOT NULL,
+    PRIMARY KEY (context_id, map_id),
+    FOREIGN KEY (context_id) REFERENCES contexts(id) ON DELETE CASCADE,
+    FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
+);
+
+-- Create indexes for context_maps
+CREATE INDEX IF NOT EXISTS idx_context_maps_context_id ON context_maps(context_id);
+CREATE INDEX IF NOT EXISTS idx_context_maps_map_id ON context_maps(map_id);
+
+-- Create default context if none exists
+INSERT INTO contexts (uid, name, is_default)
+SELECT 'default-' || CAST(id AS TEXT), name, 1
+FROM maps WHERE id = (SELECT id FROM maps LIMIT 1);
 ```
 
 ## Initialization Script
@@ -201,6 +272,24 @@ CREATE TABLE IF NOT EXISTS action_dependencies (
     UNIQUE(action_id, depends_on_action_id)
 );
 
+CREATE TABLE IF NOT EXISTS contexts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_default INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS context_maps (
+    context_id INTEGER NOT NULL,
+    map_id INTEGER NOT NULL,
+    PRIMARY KEY (context_id, map_id),
+    FOREIGN KEY (context_id) REFERENCES contexts(id) ON DELETE CASCADE,
+    FOREIGN KEY (map_id) REFERENCES maps(id) ON DELETE CASCADE
+);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_activities_map_id ON activities(map_id);
 CREATE INDEX IF NOT EXISTS idx_actions_activity_id ON actions(activity_id);
@@ -208,6 +297,8 @@ CREATE INDEX IF NOT EXISTS idx_maps_uid ON maps(uid);
 CREATE INDEX IF NOT EXISTS idx_activities_uid ON activities(uid);
 CREATE INDEX IF NOT EXISTS idx_actions_uid ON actions(uid);
 CREATE INDEX IF NOT EXISTS idx_action_dependencies_action_id ON action_dependencies(action_id);
+CREATE INDEX IF NOT EXISTS idx_context_maps_context_id ON context_maps(context_id);
+CREATE INDEX IF NOT EXISTS idx_context_maps_map_id ON context_maps(map_id);
 ```
 
 ## Sample Queries
@@ -253,4 +344,17 @@ JOIN actions act ON act.activity_id = a.id
 LEFT JOIN actors actr ON act.actor_id = actr.id
 WHERE a.map_id = ?
 ORDER BY act.priority, a.name;
+```
+
+### Get context with all its maps
+
+```sql
+SELECT 
+    c.id as context_id, c.name as context_name, c.description as context_description,
+    m.id as map_id, m.name as map_name, m.description as map_description
+FROM contexts c
+LEFT JOIN context_maps cm ON cm.context_id = c.id
+LEFT JOIN maps m ON m.id = cm.map_id
+WHERE c.id = ?
+ORDER BY m.name;
 ```

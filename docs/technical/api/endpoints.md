@@ -25,6 +25,20 @@ This section documents the REST API endpoints for StoryMaps.
 | PUT | `/maps/:id` | Update map |
 | DELETE | `/maps/:id` | Delete map |
 
+### Contexts
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/contexts` | Get all contexts |
+| GET | `/contexts/:id` | Get context by ID |
+| GET | `/contexts/:id/full` | Get context with all maps |
+| POST | `/contexts` | Create new context |
+| PUT | `/contexts/:id` | Update context |
+| DELETE | `/contexts/:id` | Delete context |
+| GET | `/contexts/:id/maps` | Get maps in context |
+| POST | `/contexts/:id/maps` | Add map to context |
+| DELETE | `/contexts/:id/maps/:mapId` | Remove map from context |
+
 ### Activities
 
 | Method | Endpoint | Description |
@@ -153,6 +167,205 @@ Update a map.
 ### DELETE /maps/:id
 
 Delete a map. Cascades to delete associated activities and actions.
+
+**Response**: 204 No Content
+
+---
+
+## Context Endpoints
+
+### GET /contexts
+
+Get all contexts. Each context includes calculated health score across all its maps.
+
+**Response** (200):
+```json
+[
+  {
+    "id": 1,
+    "uid": "context-001",
+    "name": "Shopping App",
+    "description": "E-commerce platform",
+    "is_default": 0,
+    "created_at": "2026-04-13T10:00:00.000Z",
+    "updated_at": "2026-04-13T10:00:00.000Z",
+    "health": {
+      "score": 68,
+      "totalActions": 25,
+      "fullCount": 10,
+      "partialCount": 8,
+      "noneCount": 7,
+      "byPriority": {
+        "Need": { "full": 5, "partial": 3, "none": 2, "total": 10, "score": 65 },
+        "Want": { "full": 4, "partial": 3, "none": 3, "total": 10, "score": 55 },
+        "Nice": { "full": 1, "partial": 2, "none": 2, "total": 5, "score": 40 }
+      }
+    }
+  }
+]
+```
+
+### GET /contexts/:id
+
+Get context by ID.
+
+**Response** (200):
+```json
+{
+  "id": 1,
+  "uid": "context-001",
+  "name": "Shopping App",
+  "description": "E-commerce platform",
+  "is_default": 0,
+  "created_at": "2026-04-13T10:00:00.000Z",
+  "updated_at": "2026-04-13T10:00:00.000Z",
+  "health": {
+    "score": 68,
+    "totalActions": 25,
+    "fullCount": 10,
+    "partialCount": 8,
+    "noneCount": 7
+  }
+}
+```
+
+### GET /contexts/:id/full
+
+Get context with all its associated maps. Each map includes its own health score.
+
+**Response** (200):
+```json
+{
+  "id": 1,
+  "uid": "context-001",
+  "name": "Shopping App",
+  "description": "E-commerce platform",
+  "is_default": 0,
+  "created_at": "2026-04-13T10:00:00.000Z",
+  "updated_at": "2026-04-13T10:00:00.000Z",
+  "health": {
+    "score": 68,
+    "totalActions": 25
+  },
+  "maps": [
+    {
+      "id": 1,
+      "uid": "maps-001",
+      "name": "Cart",
+      "description": "Shopping cart functionality",
+      "health": {
+        "score": 85,
+        "totalActions": 10
+      }
+    },
+    {
+      "id": 2,
+      "uid": "maps-002",
+      "name": "Checkout",
+      "description": "Payment flow",
+      "health": {
+        "score": 45,
+        "totalActions": 15
+      }
+    }
+  ]
+}
+```
+
+### POST /contexts
+
+Create a new context.
+
+**Request**:
+```json
+{
+  "name": "Mobile App",
+  "description": "iOS and Android apps"
+}
+```
+
+**Response** (201):
+```json
+{
+  "id": 2,
+  "uid": "context-002",
+  "name": "Mobile App",
+  "description": "iOS and Android apps",
+  "is_default": 0,
+  "created_at": "2026-04-13T10:00:00.000Z",
+  "updated_at": "2026-04-13T10:00:00.000Z"
+}
+```
+
+### PUT /contexts/:id
+
+Update a context.
+
+**Request**:
+```json
+{
+  "name": "Mobile App (Updated)",
+  "description": "Updated description"
+}
+```
+
+**Response** (200):
+```json
+{
+  "id": 2,
+  "uid": "context-002",
+  "name": "Mobile App (Updated)",
+  "description": "Updated description",
+  "is_default": 0,
+  "created_at": "2026-04-13T10:00:00.000Z",
+  "updated_at": "2026-04-13T11:00:00.000Z"
+}
+```
+
+### DELETE /contexts/:id
+
+Delete a context. Removes associations but does not delete maps.
+
+**Response**: 204 No Content
+
+### GET /contexts/:id/maps
+
+Get all maps in a context.
+
+**Response** (200):
+```json
+[
+  {
+    "id": 1,
+    "uid": "maps-001",
+    "name": "Cart",
+    "description": "Shopping cart functionality"
+  }
+]
+```
+
+### POST /contexts/:id/maps
+
+Add an existing map to a context.
+
+**Request**:
+```json
+{
+  "map_id": 2
+}
+```
+
+**Response** (201):
+```json
+{
+  "context_id": 1,
+  "map_id": 2
+}
+```
+
+### DELETE /contexts/:id/maps/:mapId
+
+Remove a map from a context. Does not delete the map.
 
 **Response**: 204 No Content
 
