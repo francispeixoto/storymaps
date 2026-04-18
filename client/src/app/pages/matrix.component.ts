@@ -27,8 +27,8 @@ interface DropdownOption {
     <div class="max-w-full mx-auto">
       <div class="flex justify-between items-center mb-6">
         <div>
-          <h2 class="text-2xl font-bold">{{ pageTitle }}</h2>
-          <p *ngIf="pageSubtitle" class="text-gray-600 mt-1">{{ pageSubtitle }}</p>
+          <h2 class="text-2xl font-bold dark:text-white">{{ pageTitle }}</h2>
+          <p *ngIf="pageSubtitle" class="text-gray-600 dark:text-gray-300 mt-1">{{ pageSubtitle }}</p>
         </div>
         <div class="flex gap-2">
           <button
@@ -41,35 +41,35 @@ interface DropdownOption {
           <button
             *ngIf="viewMode === 'map' && currentMap"
             (click)="openMapEditModal()"
-            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             Edit
           </button>
           <button
             (click)="goBack()"
-            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             Back
           </button>
         </div>
       </div>
 
-      <div *ngIf="hasHealthData && displayHealth" class="max-w-full mx-auto mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+      <div *ngIf="hasHealthData && displayHealth" class="max-w-full mx-auto mb-6 p-4 bg-indigo-50 dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-3">
-          <span class="font-medium text-indigo-900">Implementation</span>
+          <span class="font-medium text-indigo-900 dark:text-indigo-300">Implementation</span>
           <span [class]="getScoreClass(displayHealth.score) + ' text-lg font-bold'">
             {{ displayHealth.score }}
           </span>
         </div>
         <div class="grid grid-cols-3 gap-4 mb-3">
-          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white rounded p-2">
-            <div class="text-xs text-gray-500 mb-1">{{ priority }}</div>
+          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white dark:bg-gray-700 rounded p-2">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ priority }}</div>
             <div class="flex items-center gap-1 text-xs">
-              <span class="text-green-600">{{ displayHealth.byPriority[priority].full }}F</span>
-              <span class="text-yellow-600">{{ displayHealth.byPriority[priority].partial }}P</span>
-              <span class="text-red-600">{{ displayHealth.byPriority[priority].none }}N</span>
+              <span class="text-green-600 dark:text-green-400">{{ displayHealth.byPriority[priority].full }}F</span>
+              <span class="text-yellow-600 dark:text-yellow-400">{{ displayHealth.byPriority[priority].partial }}P</span>
+              <span class="text-red-600 dark:text-red-400">{{ displayHealth.byPriority[priority].none }}N</span>
             </div>
-            <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
+            <div class="mt-1 h-2 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
               <div 
                 class="h-full bg-indigo-500 transition-all"
                 [style.width.%]="getPriorityProgress(displayHealth.byPriority[priority])"
@@ -77,7 +77,7 @@ interface DropdownOption {
             </div>
           </div>
         </div>
-        <div class="text-xs text-gray-600">
+        <div class="text-xs text-gray-600 dark:text-gray-300">
           Overall: {{ displayHealth.fullCount }} Full / {{ displayHealth.partialCount }} Partial / {{ displayHealth.noneCount }} None ({{ displayHealth.totalActions }} total)
         </div>
       </div>
@@ -87,33 +87,33 @@ interface DropdownOption {
           <button
             type="button"
             (click)="toggleActorDropdown()"
-            class="inline-flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 min-w-[180px]"
+            class="inline-flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 min-w-[180px]"
           >
             <span>Actors: {{ getSelectedActorCount() }}</span>
             <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          <div *ngIf="actorDropdownOpen" class="absolute z-50 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg">
-            <div class="p-2 border-b border-gray-100">
+          <div *ngIf="actorDropdownOpen" class="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg">
+            <div class="p-2 border-b border-gray-100 dark:border-gray-600">
               <input
                 type="text"
                 [(ngModel)]="actorSearchTerm"
                 placeholder="Search actors..."
-                class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div class="max-h-48 overflow-y-auto p-2">
-              <label *ngFor="let actor of filteredActorOptions" class="flex items-center gap-2 py-1 text-sm cursor-pointer hover:bg-gray-50">
+              <label *ngFor="let actor of filteredActorOptions" class="flex items-center gap-2 py-1 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
                 <input
                   type="checkbox"
                   [checked]="actor.selected"
                   (change)="toggleActor(actor)"
-                  class="rounded border-gray-300"
+                  class="rounded border-gray-300 dark:border-gray-500"
                 />
                 <span class="truncate">{{ actor.name }}</span>
               </label>
-              <div *ngIf="filteredActorOptions.length === 0" class="text-sm text-gray-500 py-2 text-center">
+              <div *ngIf="filteredActorOptions.length === 0" class="text-sm text-gray-500 dark:text-gray-400 py-2 text-center">
                 No actors found
               </div>
             </div>
@@ -124,33 +124,33 @@ interface DropdownOption {
           <button
             type="button"
             (click)="toggleMapDropdown()"
-            class="inline-flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 min-w-[180px]"
+            class="inline-flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 min-w-[180px]"
           >
             <span>Maps: {{ getSelectedMapCount() }}</span>
             <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          <div *ngIf="mapDropdownOpen" class="absolute z-50 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg">
-            <div class="p-2 border-b border-gray-100">
+          <div *ngIf="mapDropdownOpen" class="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg">
+            <div class="p-2 border-b border-gray-100 dark:border-gray-600">
               <input
                 type="text"
                 [(ngModel)]="mapSearchTerm"
                 placeholder="Search maps..."
-                class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div class="max-h-48 overflow-y-auto p-2">
-              <label *ngFor="let map of filteredMapOptions" class="flex items-center gap-2 py-1 text-sm cursor-pointer hover:bg-gray-50">
+              <label *ngFor="let map of filteredMapOptions" class="flex items-center gap-2 py-1 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
                 <input
                   type="checkbox"
                   [checked]="map.selected"
                   (change)="toggleMap(map)"
-                  class="rounded border-gray-300"
+                  class="rounded border-gray-300 dark:border-gray-500"
                 />
                 <span class="truncate">{{ map.name }}</span>
               </label>
-              <div *ngIf="filteredMapOptions.length === 0" class="text-sm text-gray-500 py-2 text-center">
+              <div *ngIf="filteredMapOptions.length === 0" class="text-sm text-gray-500 dark:text-gray-400 py-2 text-center">
                 No maps found
               </div>
             </div>
@@ -161,20 +161,20 @@ interface DropdownOption {
           <button
             type="button"
             (click)="toggleStateDropdown()"
-            class="inline-flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 min-w-[180px]"
+            class="inline-flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 min-w-[180px]"
           >
             <span>Implementation: {{ getSelectedStateCount() }}</span>
             <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          <div *ngIf="stateDropdownOpen" class="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg p-2">
-            <label *ngFor="let state of stateOptions" class="flex items-center gap-2 py-1 text-sm cursor-pointer hover:bg-gray-50">
+          <div *ngIf="stateDropdownOpen" class="absolute z-50 mt-1 w-48 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-2">
+            <label *ngFor="let state of stateOptions" class="flex items-center gap-2 py-1 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
               <input
                 type="checkbox"
                 [checked]="state.selected"
                 (change)="toggleState(state)"
-                class="rounded border-gray-300"
+                class="rounded border-gray-300 dark:border-gray-500"
               />
               <span [class]="getImplementationStateClass(state.name)" class="flex items-center gap-1.5">
                 <span [class]="getImplementationStateDot(state.name)" class="w-2 h-2 rounded-full"></span>
@@ -185,7 +185,7 @@ interface DropdownOption {
         </div>
       </div>
 
-      <div *ngIf="uniqueActivities.length === 0" class="text-center py-8 text-gray-500">
+      <div *ngIf="uniqueActivities.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
         No activities yet. Add an activity to get started.
       </div>
 
@@ -198,8 +198,8 @@ interface DropdownOption {
                 <th *ngFor="let activity of uniqueActivities" class="matrix-header-col">
                   <div class="flex items-center justify-between">
                     <div>
-                      <span>{{ activity.name }}</span>
-                      <p *ngIf="activity.description" class="text-xs text-gray-500 truncate max-w-[150px]" [title]="activity.description">
+                      <span class="dark:text-white">{{ activity.name }}</span>
+                      <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]" [title]="activity.description">
                         {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
                       </p>
                     </div>
@@ -270,15 +270,15 @@ interface DropdownOption {
 
     <!-- Add Activity Modal -->
     <div *ngIf="showAddActivityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h3 class="text-lg font-medium mb-4">Add Activity</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4 dark:text-white">Add Activity</h3>
         <form [formGroup]="activityForm" (ngSubmit)="addActivityFromModal()" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
-            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Activity Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100" />
           </div>
           <div class="flex justify-end gap-2">
-            <button type="button" (click)="showAddActivityModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+            <button type="button" (click)="showAddActivityModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
             <button type="submit" [disabled]="activityForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
           </div>
         </form>
@@ -287,23 +287,23 @@ interface DropdownOption {
 
     <!-- Edit Activity Modal -->
     <div *ngIf="showEditActivityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h3 class="text-lg font-medium mb-4">Edit Activity</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4 dark:text-white">Edit Activity</h3>
         <form [formGroup]="editActivityForm" (ngSubmit)="updateActivityFromModal()" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
-            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Activity Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Description</label>
-            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
+            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100"></textarea>
           </div>
           <div class="flex justify-between items-center">
             <button type="button" (click)="confirmDeleteActivity()" class="text-sm text-red-600 hover:text-red-800">
               Delete Activity
             </button>
             <div class="flex gap-2">
-              <button type="button" (click)="showEditActivityModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+              <button type="button" (click)="showEditActivityModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
               <button type="submit" [disabled]="editActivityForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
             </div>
           </div>
@@ -313,26 +313,26 @@ interface DropdownOption {
 
     <!-- Add Action Modal -->
     <div *ngIf="showAddActionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h3 class="text-lg font-medium mb-4">Add Action</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4 dark:text-white">Add Action</h3>
         <form [formGroup]="actionForm" (ngSubmit)="addActionFromModal()" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Action Name *</label>
-            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Action Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100" />
           </div>
           <div class="flex gap-2">
             <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-700">Actor</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Actor</label>
               <div class="flex items-center gap-1">
-                <select formControlName="actor_id" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                <select formControlName="actor_id" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-2 py-2 border text-sm bg-white dark:bg-gray-700 dark:text-gray-100">
                   <option [ngValue]="null">Select actor...</option>
                   <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
                 </select>
               </div>
             </div>
             <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-700">Priority *</label>
-              <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Priority *</label>
+              <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-2 py-2 border text-sm bg-white dark:bg-gray-700 dark:text-gray-100">
                 <option value="Need">Need</option>
                 <option value="Want">Want</option>
                 <option value="Nice">Nice</option>
@@ -340,19 +340,19 @@ interface DropdownOption {
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Implementation State *</label>
-            <select formControlName="implementation_state" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Implementation State *</label>
+            <select formControlName="implementation_state" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100">
               <option value="Full">Full</option>
               <option value="Partial">Partial</option>
               <option value="None">None</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Description</label>
-            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
+            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100"></textarea>
           </div>
           <div class="flex justify-end gap-2">
-            <button type="button" (click)="showAddActionModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+            <button type="button" (click)="showAddActionModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
             <button type="submit" [disabled]="actionForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
           </div>
         </form>
@@ -361,57 +361,57 @@ interface DropdownOption {
 
     <!-- View/Edit Action Modal -->
     <div *ngIf="showActionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h3 class="text-lg font-medium mb-4">{{ viewMode === 'actor' ? 'Action Details' : 'Edit Action' }}</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4 dark:text-white">{{ viewMode === 'actor' ? 'Action Details' : 'Edit Action' }}</h3>
         
         <div *ngIf="viewMode === 'actor'; else editForm" class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-500">Action Name</label>
-            <p class="text-gray-900">{{ selectedAction?.name }}</p>
+            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Action Name</label>
+            <p class="text-gray-900 dark:text-gray-100">{{ selectedAction?.name }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-500">Actor</label>
-            <p class="text-gray-900">{{ selectedAction?.actor_name || '-' }}</p>
+            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Actor</label>
+            <p class="text-gray-900 dark:text-gray-100">{{ selectedAction?.actor_name || '-' }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-500">Priority</label>
-            <p class="text-gray-900">{{ selectedAction?.priority }}</p>
+            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Priority</label>
+            <p class="text-gray-900 dark:text-gray-100">{{ selectedAction?.priority }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-500">Implementation State</label>
-            <p class="text-gray-900 flex items-center gap-1.5">
+            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Implementation State</label>
+            <p class="text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
               <span [class]="getImplementationStateDot(selectedAction?.implementation_state)" class="w-2 h-2 rounded-full"></span>
               {{ selectedAction?.implementation_state }}
             </p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-500">Map</label>
-            <p class="text-gray-900">{{ selectedAction?.map_name || '-' }}</p>
+            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Map</label>
+            <p class="text-gray-900 dark:text-gray-100">{{ selectedAction?.map_name || '-' }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-500">Activity</label>
-            <p class="text-gray-900">{{ selectedAction?.activity_name || '-' }}</p>
+            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Activity</label>
+            <p class="text-gray-900 dark:text-gray-100">{{ selectedAction?.activity_name || '-' }}</p>
           </div>
           <div *ngIf="selectedAction?.description">
-            <label class="block text-sm font-medium text-gray-500">Description</label>
-            <p class="text-gray-900">{{ selectedAction?.description }}</p>
+            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
+            <p class="text-gray-900 dark:text-gray-100">{{ selectedAction?.description }}</p>
           </div>
           <div class="flex justify-end pt-4">
-            <button type="button" (click)="showActionModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Close</button>
+            <button type="button" (click)="showActionModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Close</button>
           </div>
         </div>
 
         <ng-template #editForm>
           <form [formGroup]="editActionForm" (ngSubmit)="updateActionFromModal()" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Action Name *</label>
-              <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Action Name *</label>
+              <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100" />
             </div>
             <div class="flex gap-2">
               <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700">Actor</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Actor</label>
                 <div class="flex items-center gap-1">
-                  <select formControlName="actor_id" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                  <select formControlName="actor_id" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-2 py-2 border text-sm bg-white dark:bg-gray-700 dark:text-gray-100">
                     <option [ngValue]="null">Select actor...</option>
                     <option *ngFor="let actor of actors" [ngValue]="actor.id">{{ actor.name }}</option>
                   </select>
@@ -419,8 +419,8 @@ interface DropdownOption {
                 </div>
               </div>
               <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700">Priority *</label>
-                <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 px-2 py-2 border text-sm">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Priority *</label>
+                <select formControlName="priority" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-2 py-2 border text-sm bg-white dark:bg-gray-700 dark:text-gray-100">
                   <option value="Need">Need</option>
                   <option value="Want">Want</option>
                   <option value="Nice">Nice</option>
@@ -428,37 +428,37 @@ interface DropdownOption {
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Implementation State *</label>
-              <select formControlName="implementation_state" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Implementation State *</label>
+              <select formControlName="implementation_state" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100">
                 <option value="Full">Full</option>
                 <option value="Partial">Partial</option>
                 <option value="None">None</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Description</label>
-              <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
+              <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100"></textarea>
             </div>
 
-            <div class="border-t pt-4 mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Depends on:</label>
-              <div *ngIf="actionDependencies.length === 0" class="text-sm text-gray-500">No dependencies</div>
-              <div *ngFor="let dep of actionDependencies" class="flex items-center justify-between text-sm py-1">
+            <div class="border-t pt-4 mt-4 dark:border-gray-600">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Depends on:</label>
+              <div *ngIf="actionDependencies.length === 0" class="text-sm text-gray-500 dark:text-gray-400">No dependencies</div>
+              <div *ngFor="let dep of actionDependencies" class="flex items-center justify-between text-sm py-1 text-gray-700 dark:text-gray-200">
                 <span>{{ getDependencyActionName(dep.depends_on_action_id) }}</span>
                 <button type="button" (click)="removeDependency(dep.depends_on_action_id)" class="text-red-600 hover:text-red-800 text-xs">×</button>
               </div>
             </div>
 
-            <div *ngIf="actionPrerequisitesOf.length > 0" class="border-t pt-4 mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Prerequisite of:</label>
-              <div *ngFor="let preq of actionPrerequisitesOf" class="text-sm text-gray-500 py-1">
+            <div *ngIf="actionPrerequisitesOf.length > 0" class="border-t pt-4 mt-4 dark:border-gray-600">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Prerequisite of:</label>
+              <div *ngFor="let preq of actionPrerequisitesOf" class="text-sm text-gray-500 dark:text-gray-400 py-1">
                 {{ preq.action_name || preq.name }} ({{ preq.action_priority || preq.priority }})
               </div>
             </div>
 
-            <div class="border-t pt-4 mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Add dependency:</label>
-              <select #depSelect (change)="onAddDependencySelected(depSelect.value); depSelect.value = ''" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border text-sm">
+            <div class="border-t pt-4 mt-4 dark:border-gray-600">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Add dependency:</label>
+              <select #depSelect (change)="onAddDependencySelected(depSelect.value); depSelect.value = ''" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border text-sm bg-white dark:bg-gray-700 dark:text-gray-100">
                 <option value="">Select action...</option>
                 <option *ngFor="let action of getAvailableActionsFor(editingActionId || 0)" [value]="action.id">
                   {{ action.map_name }} / {{ action.activity_name }} / {{ action.name }} ({{ action.priority }})
@@ -471,7 +471,7 @@ interface DropdownOption {
                 Delete Action
               </button>
               <div class="flex gap-2">
-                <button type="button" (click)="showActionModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+                <button type="button" (click)="showActionModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
                 <button type="submit" [disabled]="editActionForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
               </div>
             </div>
@@ -482,15 +482,15 @@ interface DropdownOption {
 
     <!-- New Actor Modal -->
     <div *ngIf="showNewActorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h3 class="text-lg font-medium mb-4">Add Actor</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4 dark:text-white">Add Actor</h3>
         <form [formGroup]="newActorForm" (ngSubmit)="addActorFromModal()" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Actor Name *</label>
-            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Actor Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100" />
           </div>
           <div class="flex justify-end gap-2">
-            <button type="button" (click)="showNewActorModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+            <button type="button" (click)="showNewActorModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
             <button type="submit" [disabled]="newActorForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Add</button>
           </div>
         </form>
@@ -508,23 +508,23 @@ interface DropdownOption {
 
     <!-- Edit Map Modal -->
     <div *ngIf="showMapEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h3 class="text-lg font-medium mb-4">Edit Map</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-medium mb-4 dark:text-white">Edit Map</h3>
         <form [formGroup]="editMapForm" (ngSubmit)="updateMapFromModal()" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Map Name *</label>
-            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Map Name *</label>
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Description</label>
-            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 px-3 py-2 border"></textarea>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
+            <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100"></textarea>
           </div>
           <div class="flex justify-between items-center">
             <button type="button" (click)="confirmDeleteMap()" class="text-sm text-red-600 hover:text-red-800">
               Delete Map
             </button>
             <div class="flex gap-2">
-              <button type="button" (click)="showMapEditModal = false" class="px-3 py-2 border border-gray-300 text-gray-700 rounded">Cancel</button>
+              <button type="button" (click)="showMapEditModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
               <button type="submit" [disabled]="editMapForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
             </div>
           </div>
@@ -985,10 +985,10 @@ export class MatrixComponent implements OnInit, OnChanges {
 
   getPriorityClass(priority: string): string {
     switch (priority) {
-      case 'Need': return 'bg-red-100 text-red-800';
-      case 'Want': return 'bg-blue-100 text-blue-800';
-      case 'Nice': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Need': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+      case 'Want': return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
+      case 'Nice': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
     }
   }
 
@@ -1003,10 +1003,10 @@ export class MatrixComponent implements OnInit, OnChanges {
 
   getImplementationStateClass(state: string): string {
     switch (state) {
-      case 'Full': return 'text-green-600';
-      case 'Partial': return 'text-yellow-600';
-      case 'None': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'Full': return 'text-green-600 dark:text-green-400';
+      case 'Partial': return 'text-yellow-600 dark:text-yellow-400';
+      case 'None': return 'text-red-600 dark:text-red-400';
+      default: return 'text-gray-600 dark:text-gray-400';
     }
   }
 
