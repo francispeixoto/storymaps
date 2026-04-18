@@ -50,13 +50,13 @@ import { Context, Map } from '../models';
           <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white dark:bg-gray-800 rounded p-2">
             <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ priority }}</div>
             <div class="flex items-center gap-1 text-xs">
-              <span class="text-green-600">{{ context.health.byPriority[priority].full }}F</span>
-              <span class="text-yellow-600">{{ context.health.byPriority[priority].partial }}P</span>
-              <span class="text-red-600">{{ context.health.byPriority[priority].none }}N</span>
+              <span class="text-green-600 dark:text-green-400">{{ context.health.byPriority[priority].full }}F</span>
+              <span class="text-yellow-600 dark:text-yellow-400">{{ context.health.byPriority[priority].partial }}P</span>
+              <span class="text-red-600 dark:text-red-400">{{ context.health.byPriority[priority].none }}N</span>
             </div>
-            <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
+            <div class="mt-1 h-2 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
               <div 
-                class="h-full bg-indigo-50 dark:bg-gray-8000 transition-all"
+                class="h-full bg-indigo-500 dark:bg-indigo-600 transition-all"
                 [style.width.%]="getPriorityProgress(context.health.byPriority[priority])"
               ></div>
             </div>
