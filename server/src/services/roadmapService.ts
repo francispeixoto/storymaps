@@ -112,8 +112,8 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
     JOIN maps m ON act.map_id = m.id
     LEFT JOIN context_maps cm ON m.id = cm.map_id
     LEFT JOIN contexts c ON cm.context_id = c.id
-    WHERE c.id = ? OR (c.id IS NULL AND (? IS NULL))
-  `).all(contextId || null, contextId || null) as ActionRow[];
+    WHERE (? IS NULL) OR c.id = ?
+  `).all(contextId ?? null, contextId ?? null) as ActionRow[];
 
   // Get all activities (including those with no actions)
   const activities = db.prepare(`
@@ -125,8 +125,8 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
     JOIN maps m ON act.map_id = m.id
     LEFT JOIN context_maps cm ON m.id = cm.map_id
     LEFT JOIN contexts c ON cm.context_id = c.id
-    WHERE c.id = ? OR (c.id IS NULL AND (? IS NULL))
-  `).all(contextId || null, contextId || null) as ActivityRow[];
+    WHERE (? IS NULL) OR c.id = ?
+  `).all(contextId ?? null, contextId ?? null) as ActivityRow[];
 
   // Get dependencies for all relevant actions
   const actionIds = actions.map(a => a.id);
@@ -190,8 +190,8 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
     FROM maps m
     LEFT JOIN context_maps cm ON m.id = cm.map_id
     LEFT JOIN contexts c ON cm.context_id = c.id
-    WHERE c.id = ? OR (c.id IS NULL AND (? IS NULL))
-  `).all(contextId || null, contextId || null) as any[];
+    WHERE (? IS NULL) OR c.id = ?
+  `).all(contextId ?? null, contextId ?? null) as any[];
 
   // Process activities (grouped by map)
   for (const activity of activities) {
