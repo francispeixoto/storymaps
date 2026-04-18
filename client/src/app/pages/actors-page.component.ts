@@ -20,9 +20,9 @@ import { Actor } from '../models';
         </a>
       </div>
 
-      <div *ngIf="actors.length > 0" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div *ngIf="actors.length > 0" class="mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-gray-700">Overall Implementation:</span>
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Overall Implementation:</span>
           <span [class]="getScoreClass(globalSatisfaction)">
             {{ globalSatisfaction }} - {{ getImplementationLabel(globalSatisfaction) }}
           </span>
@@ -37,20 +37,20 @@ import { Actor } from '../models';
         <a
           *ngFor="let actor of actors"
           [routerLink]="['/actors', actor.id]"
-          class="block bg-white rounded-lg shadow p-4 border border-gray-200 hover:border-indigo-500 cursor-pointer transition-colors"
+          class="block bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 cursor-pointer transition-colors"
         >
           <div class="flex justify-between items-start">
             <div>
-              <h3 class="text-lg font-medium text-gray-900">{{ actor.name }}</h3>
-              <p *ngIf="actor.description" class="mt-1 text-sm text-gray-500">{{ actor.description }}</p>
+              <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ actor.name }}</h3>
+              <p *ngIf="actor.description" class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">{{ actor.description }}</p>
             </div>
             <div *ngIf="actor.action_count && actor.action_count > 0" [class]="getScoreClass(actor.satisfaction)">
               <span class="text-lg font-bold">{{ actor.satisfaction }}</span>
               <span class="text-xs ml-1">{{ getImplementationLabel(actor.satisfaction) }}</span>
             </div>
           </div>
-          <p class="mt-2 text-xs text-gray-400">UID: {{ actor.uid }}</p>
-          <p *ngIf="actor.action_count" class="text-xs text-gray-500 mt-1">
+          <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">UID: {{ actor.uid }}</p>
+          <p *ngIf="actor.action_count" class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
             {{ actor.action_count }} action{{ actor.action_count !== 1 ? 's' : '' }}
           </p>
         </a>
@@ -89,7 +89,7 @@ export class ActorsPageComponent implements OnInit {
   }
 
   getScoreClass(score: number | undefined): string {
-    if (score === undefined) return 'text-gray-500';
+    if (score === undefined) return 'text-gray-500 dark:text-gray-400 dark:text-gray-500';
     if (score >= 75) return 'text-green-600';
     if (score >= 50) return 'text-yellow-600';
     return 'text-red-600';
