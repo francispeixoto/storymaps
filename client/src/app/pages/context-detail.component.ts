@@ -20,26 +20,26 @@ import { Context, Map } from '../models';
             <h2 class="text-2xl font-bold">{{ context.name }}</h2>
             <span *ngIf="context.is_default" class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800">system</span>
           </div>
-          <p *ngIf="context.description" class="text-gray-600 mt-1">{{ context.description }}</p>
+          <p *ngIf="context.description" class="text-gray-600 dark:text-gray-300 mt-1">{{ context.description }}</p>
         </div>
         <div class="flex gap-2">
           <button
             *ngIf="!context.is_default"
             (click)="goToEdit()"
-            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700"
           >
             Edit
           </button>
           <button
             (click)="goBack()"
-            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700"
           >
             Back
           </button>
         </div>
       </div>
 
-      <div *ngIf="context.health && context.health.totalActions > 0" class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+      <div *ngIf="context.health && context.health.totalActions > 0" class="mb-6 p-4 bg-indigo-50 dark:bg-gray-800 rounded-lg border border-indigo-200">
         <div class="flex items-center justify-between mb-3">
           <span class="font-medium text-indigo-900">Context Health</span>
           <span [class]="getScoreClass(context.health.score) + ' text-lg font-bold'">
@@ -47,8 +47,8 @@ import { Context, Map } from '../models';
           </span>
         </div>
         <div class="grid grid-cols-3 gap-4 mb-3">
-          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white rounded p-2">
-            <div class="text-xs text-gray-500 mb-1">{{ priority }}</div>
+          <div *ngFor="let priority of ['Need', 'Want', 'Nice']" class="bg-white dark:bg-gray-800 rounded p-2">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ priority }}</div>
             <div class="flex items-center gap-1 text-xs">
               <span class="text-green-600">{{ context.health.byPriority[priority].full }}F</span>
               <span class="text-yellow-600">{{ context.health.byPriority[priority].partial }}P</span>
@@ -56,13 +56,13 @@ import { Context, Map } from '../models';
             </div>
             <div class="mt-1 h-2 bg-gray-200 rounded overflow-hidden">
               <div 
-                class="h-full bg-indigo-500 transition-all"
+                class="h-full bg-indigo-50 dark:bg-gray-8000 transition-all"
                 [style.width.%]="getPriorityProgress(context.health.byPriority[priority])"
               ></div>
             </div>
           </div>
         </div>
-        <div class="text-xs text-gray-600">
+        <div class="text-xs text-gray-600 dark:text-gray-300">
           Overall: {{ context.health.fullCount }} Full / {{ context.health.partialCount }} Partial / {{ context.health.noneCount }} None ({{ context.health.totalActions }} total)
         </div>
       </div>
@@ -76,8 +76,8 @@ import { Context, Map } from '../models';
         </button>
       </div>
 
-      <div *ngIf="maps.length === 0" class="text-center py-12 bg-white rounded-lg border border-gray-200">
-        <p class="text-gray-600 mb-4">No maps in this context yet.</p>
+      <div *ngIf="maps.length === 0" class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-gray-600 dark:text-gray-300 mb-4">No maps in this context yet.</p>
         <button
           (click)="showMapSelector = true"
           class="text-indigo-600 hover:text-indigo-800"
@@ -87,9 +87,9 @@ import { Context, Map } from '../models';
       </div>
 
       <div class="space-y-6">
-        <div *ngFor="let map of maps" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div *ngFor="let map of maps" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div 
-            class="flex justify-between items-center px-4 py-3 bg-gray-50 cursor-pointer"
+            class="flex justify-between items-center px-4 py-3 bg-gray-50 dark:bg-gray-700 cursor-pointer"
             (click)="toggleMapExpanded(map.id)"
           >
             <div class="flex items-center gap-3">
@@ -98,7 +98,7 @@ import { Context, Map } from '../models';
               <span [class]="getScoreClass(map.health?.score)" class="font-medium">
                 {{ map.health?.score || 0 }}
               </span>
-              <span class="text-xs text-gray-500">
+              <span class="text-xs text-gray-500 dark:text-gray-400">
                 {{ map.health?.fullCount || 0 }}F / {{ map.health?.partialCount || 0 }}P / {{ map.health?.noneCount || 0 }}N
               </span>
             </div>
@@ -180,7 +180,7 @@ export class ContextDetailComponent implements OnInit {
   }
 
   getScoreClass(score: number | undefined): string {
-    if (score === undefined || score === null) return 'text-gray-500';
+    if (score === undefined || score === null) return 'text-gray-500 dark:text-gray-400';
     if (score >= 75) return 'text-green-600';
     if (score >= 50) return 'text-yellow-600';
     if (score >= 25) return 'text-orange-500';

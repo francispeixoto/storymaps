@@ -15,7 +15,7 @@ import { Context } from '../models';
       <div class="flex justify-between items-center mb-6">
         <div>
           <h2 class="text-xl font-semibold">Select a Context</h2>
-          <p class="text-sm text-gray-500 mt-1">Choose a context to view and manage your story maps</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Choose a context to view and manage your story maps</p>
         </div>
         <button
           (click)="goToCreate()"
@@ -32,18 +32,18 @@ import { Context } from '../models';
       <div *ngIf="contexts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
           *ngFor="let context of contexts"
-          class="bg-white rounded-lg shadow p-4 border border-gray-200 hover:border-indigo-500 transition-colors cursor-pointer"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors cursor-pointer"
           [class.border-blue-500]="context.is_default"
           (click)="viewContext(context)"
         >
           <div class="flex items-start">
             <div class="flex-1" (click)="viewContext(context)">
               <div class="flex items-center gap-2">
-                <h3 class="text-lg font-medium text-gray-900">{{ context.name }}</h3>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ context.name }}</h3>
                 <span *ngIf="context.is_default" class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800">system</span>
               </div>
-              <p *ngIf="context.description" class="mt-1 text-sm text-gray-500">{{ context.description }}</p>
-              <p class="mt-2 text-sm text-gray-500">{{ context.map_count || 0 }} map{{ (context.map_count || 0) !== 1 ? 's' : '' }}</p>
+              <p *ngIf="context.description" class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ context.description }}</p>
+              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ context.map_count || 0 }} map{{ (context.map_count || 0) !== 1 ? 's' : '' }}</p>
             </div>
             <div [class]="getScoreClass(context.health?.score)" class="text-right flex-shrink-0 ml-3">
               <span class="text-lg font-bold">{{ context.health?.score ?? 0 }}</span>
@@ -52,7 +52,7 @@ import { Context } from '../models';
             <div class="flex gap-2 ml-2" *ngIf="!context.is_default" (click)="$event.stopPropagation()">
               <button
                 (click)="goToEdit(context)"
-                class="text-gray-400 hover:text-gray-600"
+                class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 title="Edit"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@ export class ContextsPageComponent implements OnInit {
   }
 
   getScoreClass(score: number | undefined): string {
-    if (score === undefined) return 'text-gray-500';
+    if (score === undefined) return 'text-gray-500 dark:text-gray-400';
     if (score >= 75) return 'text-green-600';
     if (score >= 50) return 'text-yellow-600';
     return 'text-red-600';

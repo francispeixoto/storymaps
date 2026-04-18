@@ -20,15 +20,15 @@ import { Context } from '../models';
       </div>
 
       <form [formGroup]="contextForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Context Details</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Context Details</h3>
           <div>
-            <label for="name" class="block text-sm font-medium text-gray-700">Context Name *</label>
+            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Context Name *</label>
             <input
               type="text"
               id="name"
               formControlName="name"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
               [class.border-red-500]="contextForm.get('name')?.invalid && contextForm.get('name')?.touched"
             />
             <p *ngIf="contextForm.get('name')?.invalid && contextForm.get('name')?.touched" class="mt-1 text-sm text-red-600">
@@ -37,12 +37,12 @@ import { Context } from '../models';
           </div>
 
           <div class="mt-4">
-            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
             <textarea
               id="description"
               formControlName="description"
               rows="3"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
             ></textarea>
           </div>
         </div>
@@ -58,7 +58,7 @@ import { Context } from '../models';
           <button
             type="button"
             (click)="goBack()"
-            class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50"
           >
             Cancel
           </button>
