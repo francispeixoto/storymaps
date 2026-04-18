@@ -99,26 +99,7 @@ import { RoadmapItem, ActionBlocker } from '../models';
             </div>
           </div>
 
-          <div class="flex items-center gap-4 text-sm">
-            <span 
-              *ngIf="item.health?.score !== undefined"
-              class="px-2 py-0.5 rounded text-xs font-medium"
-              [class.bg-green-100]="item.health?.score >= 75"
-              [class.text-green-800]="item.health?.score >= 75"
-              [class.dark:bg-green-900]="item.health?.score >= 75"
-              [class.dark:text-green-200]="item.health?.score >= 75"
-              [class.bg-yellow-100]="item.health?.score >= 50 && item.health?.score < 75"
-              [class.text-yellow-800]="item.health?.score >= 50 && item.health?.score < 75"
-              [class.dark:bg-yellow-900]="item.health?.score >= 50 && item.health?.score < 75"
-              [class.dark:text-yellow-200]="item.health?.score >= 50 && item.health?.score < 75"
-              [class.bg-red-100]="item.health?.score < 50"
-              [class.text-red-800]="item.health?.score < 50"
-              [class.dark:bg-red-900]="item.health?.score < 50"
-              [class.dark:text-red-200]="item.health?.score < 50"
-            >
-              {{ item.health?.score }}%
-            </span>
-
+          <div class="flex items-center gap-3 text-sm">
             <span *ngIf="item.dependencyBlockCount > 0" class="flex items-center gap-1">
               <span 
                 class="px-2 py-0.5 text-xs rounded"
