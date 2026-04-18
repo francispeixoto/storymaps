@@ -54,7 +54,6 @@ interface ActivityRow {
   id: number;
   uid: string;
   name: string;
-  priority: string;
   map_id: number;
   map_name: string;
   context_id: number;
@@ -118,7 +117,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
   // Get all activities (including those with no actions)
   const activities = db.prepare(`
     SELECT 
-      act.id, act.uid, act.name, act.priority,
+      act.id, act.uid, act.name,
       m.id as map_id, m.name as map_name,
       c.id as context_id, c.name as context_name
     FROM activities act
