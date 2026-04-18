@@ -7,6 +7,7 @@ import activityRoutes from './routes/activityRoutes';
 import actionRoutes from './routes/actionRoutes';
 import actorRoutes from './routes/actorRoutes';
 import contextRoutes from './routes/contextRoutes';
+import roadmapRoutes from './routes/roadmapRoutes';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -22,6 +23,7 @@ app.use('/api/maps', mapRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/actions', actionRoutes);
 app.use('/api/actors', actorRoutes);
+app.use('/api/roadmap', roadmapRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });

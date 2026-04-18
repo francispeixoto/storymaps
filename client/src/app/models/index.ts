@@ -118,3 +118,27 @@ export interface ActionWithContext {
   action_priority?: string;
   action_id?: number;
 }
+
+export interface ActionBlocker {
+  actionId: number;
+  actionName: string;
+  priority: 'Need' | 'Want' | 'Nice';
+  blockingPriority: string;
+  state: 'None' | 'Partial' | 'Full';
+  status: 'blocked' | 'warning' | 'ready';
+}
+
+export interface RoadmapItem {
+  level: 'context' | 'map' | 'activity' | 'action';
+  id: number;
+  uid: string;
+  name: string;
+  priority: 'Need' | 'Want' | 'Nice';
+  implementationState: 'Full' | 'Partial' | 'None';
+  health?: MapHealth;
+  workRemaining: number;
+  dependencyBlockCount: number;
+  dependencyBlockers: ActionBlocker[];
+  children: RoadmapItem[];
+  expanded?: boolean;
+}

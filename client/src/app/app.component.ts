@@ -27,6 +27,11 @@ import { ToastComponent } from './components/toast.component';
                  [class.text-indigo-600]="isActive('/actors')" [class.font-medium]="isActive('/actors')">
                 Actors
               </a>
+              <a routerLink="/roadmap" class="hover:text-gray-900" 
+                 [class.text-gray-600]="!darkMode" [class.text-gray-300]="darkMode"
+                 [class.text-indigo-600]="isActive('/roadmap')" [class.font-medium]="isActive('/roadmap')">
+                Roadmap
+              </a>
             </nav>
             <button
               (click)="toggleDarkMode()"
