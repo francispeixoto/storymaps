@@ -59,6 +59,15 @@ import { RoadmapItem, ActionBlocker } from '../models';
           </button>
           <span *ngIf="item.children.length === 0" class="w-5"></span>
 
+          <span *ngIf="item.level === 'action'" class="text-lg">
+            <span *ngIf="hasBlocked(item)" class="text-red-500" title="Blocked">🔴</span>
+            <span *ngIf="!hasBlocked(item) && hasWarning(item)" class="text-yellow-500" title="Warning">🟡</span>
+            <span *ngIf="!hasBlocked(item) && !hasWarning(item) && item.blockingCount > 0" class="text-orange-500" title="Blocking others">⛔</span>
+            <span *ngIf="!hasBlocked(item) && !hasWarning(item) && item.blockingCount === 0" class="text-green-500" title="Ready">✅</span>
+          </span>
+
+          <span *ngIf="item.level !== 'action'" class="w-5"></span>
+
           <span 
             class="px-2 py-0.5 text-xs font-medium rounded"
             [class.bg-red-100]="item.priority === 'Need'"
@@ -81,6 +90,12 @@ import { RoadmapItem, ActionBlocker } from '../models';
             <div class="flex items-center gap-2">
               <span class="text-xs text-gray-400 dark:text-gray-500">{{ item.level }}</span>
               <span class="font-medium text-gray-900 dark:text-white truncate">{{ item.name }}</span>
+              <span *ngIf="item.level === 'action'" class="text-xs text-gray-500 dark:text-gray-400">
+                <span *ngIf="hasBlocked(item)">(blocked by: {{ item.dependencyBlockers[0].actionName }})</span>
+                <span *ngIf="!hasBlocked(item) && hasWarning(item)">(warn: {{ item.dependencyBlockers[0].actionName }})</span>
+                <span *ngIf="!hasBlocked(item) && !hasWarning(item) && item.blockingCount > 0">(blocking: {{ item.blockingCount }})</span>
+                <span *ngIf="!hasBlocked(item) && !hasWarning(item) && item.blockingCount === 0">(ready)</span>
+              </span>
             </div>
           </div>
 

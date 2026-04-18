@@ -32,6 +32,7 @@ export interface RoadmapItem {
   health?: MapHealth;
   workRemaining: number;
   dependencyBlockCount: number;
+  blockingCount: number;
   dependencyBlockers: ActionBlocker[];
   children: RoadmapItem[];
 }
@@ -130,6 +131,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
   // Get dependencies for all relevant actions
   const actionIds = actions.map(a => a.id);
   const dependenciesMap: Map<number, any[]> = new Map();
+  const blockingCountMap: Map<number, number> = new Map();
   
   if (actionIds.length > 0) {
     const placeholders = actionIds.map(() => '?').join(',');
@@ -146,6 +148,18 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
       }
       dependenciesMap.get(dep.action_id)!.push(dep);
     }
+
+    // Get reverse dependencies - count how many actions depend on each action
+    const reverseDeps = db.prepare(`
+      SELECT depends_on_action_id, COUNT(*) as count
+      FROM action_dependencies
+      WHERE depends_on_action_id IN (${placeholders})
+      GROUP BY depends_on_action_id
+    `).all(...actionIds) as any[];
+
+    for (const rd of reverseDeps) {
+      blockingCountMap.set(rd.depends_on_action_id, rd.count);
+    }
   }
 
   // Build action items with blockers
@@ -159,6 +173,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
   for (const action of actions) {
     const deps = dependenciesMap.get(action.id) || [];
     const { blockers, blockCount } = analyzeBlockers(action.id, action.priority, deps);
+    const blockingCount = blockingCountMap.get(action.id) || 0;
 
     const isIncomplete = action.implementation_state !== 'Full';
     
@@ -171,6 +186,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
       implementationState: action.implementation_state as 'Full' | 'Partial' | 'None',
       workRemaining: isIncomplete ? 1 : 0,
       dependencyBlockCount: blockCount,
+      blockingCount: blockingCount,
       dependencyBlockers: blockers,
       children: []
     };
@@ -211,6 +227,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
       implementationState: minImplState,
       workRemaining,
       dependencyBlockCount: maxBlockCount,
+      blockingCount: 0,
       dependencyBlockers: [],
       children: activityActions
     };
@@ -248,6 +265,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
       health,
       workRemaining,
       dependencyBlockCount: maxBlockCount,
+      blockingCount: 0,
       dependencyBlockers: [],
       children: mapActivities
     };
@@ -276,6 +294,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
         implementationState: 'Full',
         workRemaining: 0,
         dependencyBlockCount: 0,
+        blockingCount: 0,
         dependencyBlockers: [],
         children: []
       });
@@ -314,6 +333,7 @@ export function getRoadmap(contextId?: number): RoadmapItem[] {
       health,
       workRemaining,
       dependencyBlockCount: maxBlockCount,
+      blockingCount: 0,
       dependencyBlockers: [],
       children: ctxMaps
     };

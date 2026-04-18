@@ -138,6 +138,7 @@ export interface RoadmapItem {
   health?: MapHealth;
   workRemaining: number;
   dependencyBlockCount: number;
+  blockingCount: number;
   dependencyBlockers: ActionBlocker[];
   children: RoadmapItem[];
   expanded?: boolean;
