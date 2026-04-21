@@ -25,10 +25,9 @@ interface DropdownOption {
   imports: [CommonModule, FormsModule, ReactiveFormsModule, ConfirmDeleteDialogComponent],
   template: `
     <div class="max-w-full mx-auto">
-      <div class="flex justify-between items-center mb-6">
-        <div>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div class="flex-1">
           <h2 class="text-2xl font-bold dark:text-white">{{ pageTitle }}</h2>
-          <p *ngIf="pageSubtitle" class="text-gray-600 dark:text-gray-300 mt-1">{{ pageSubtitle }}</p>
         </div>
         <div class="flex gap-2">
           <button
@@ -53,6 +52,7 @@ interface DropdownOption {
           </button>
         </div>
       </div>
+      <p *ngIf="pageSubtitle" class="text-gray-600 dark:text-gray-300 mb-6">{{ pageSubtitle }}</p>
 
       <div *ngIf="hasHealthData && displayHealth" class="max-w-full mx-auto mb-6 p-4 bg-indigo-50 dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-3">
