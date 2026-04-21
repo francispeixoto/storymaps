@@ -5,6 +5,7 @@ import { ContextDetailComponent } from './pages/context-detail.component';
 import { MapFormComponent } from './pages/map-form.component';
 import { ActorsPageComponent } from './pages/actors-page.component';
 import { ActorFormComponent } from './pages/actor-form.component';
+import { ActorDetailComponent } from './pages/actor-detail.component';
 import { MatrixComponent } from './pages/matrix.component';
 
 export const routes: Routes = [
@@ -15,7 +16,7 @@ export const routes: Routes = [
   { path: 'contexts/:id/edit', component: ContextFormComponent, data: { mode: 'edit' } },
   { path: 'actors', component: ActorsPageComponent },
   { path: 'actors/create', component: ActorFormComponent, data: { mode: 'create' } },
-  { path: 'actors/:id', component: MatrixComponent },
+  { path: 'actors/:id', component: ActorDetailComponent },
   { path: 'actors/:id/edit', component: ActorFormComponent, data: { mode: 'edit' } },
   { path: 'maps/create', component: MapFormComponent, data: { mode: 'create' } },
   { path: 'maps/:id', component: MatrixComponent }
