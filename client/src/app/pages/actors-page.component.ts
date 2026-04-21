@@ -133,7 +133,7 @@ import { Actor, ActorAction } from '../models';
           </div>
         </div>
 
-        <div class="mb-4">
+        <div *ngIf="actorActions.length > 0" class="mb-4">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Reassign actions to:</label>
           <div class="flex gap-2">
             <select [(ngModel)]="selectedReassignActorId" class="flex-1 rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100 text-sm">
@@ -142,6 +142,10 @@ import { Actor, ActorAction } from '../models';
             </select>
             <button type="button" (click)="showNewActorModal = true" class="text-indigo-600 hover:text-indigo-800 text-sm whitespace-nowrap">+ New</button>
           </div>
+        </div>
+
+        <div *ngIf="actorActions.length === 0" class="mb-4 text-sm text-gray-600 dark:text-gray-300">
+          This actor has no associated actions and can be safely deleted.
         </div>
 
         <div class="flex justify-between">
