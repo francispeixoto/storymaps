@@ -196,33 +196,48 @@ interface DropdownOption {
               <tr>
                 <th class="matrix-corner"></th>
                 <th *ngFor="let activity of uniqueActivities" class="matrix-header-col">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <span class="dark:text-white">{{ activity.name }}</span>
-                      <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]" [title]="activity.description">
-                        {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
-                      </p>
+                  <div class="flex flex-col">
+                    <div class="flex items-center justify-between mb-1">
+                      <div>
+                        <span class="dark:text-white">{{ activity.name }}</span>
+                        <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400">
+                          {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
+                        </p>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <button
+                          *ngIf="viewMode === 'map'"
+                          type="button"
+                          (click)="openEditActivityModal(activity)"
+                          class="text-xs text-gray-400 hover:text-gray-600"
+                          title="Edit activity"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                          </svg>
+                        </button>
+                        <button
+                          *ngIf="viewMode === 'map'"
+                          type="button"
+                          (click)="openAddActionModal(activity.id)"
+                          class="text-xs text-indigo-600 hover:text-indigo-800 ml-1"
+                        >
+                          + Add
+                        </button>
+                      </div>
                     </div>
-                    <div class="flex items-center gap-1">
-                      <button
-                        *ngIf="viewMode === 'map'"
-                        type="button"
-                        (click)="openEditActivityModal(activity)"
-                        class="text-xs text-gray-400 hover:text-gray-600"
-                        title="Edit activity"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        *ngIf="viewMode === 'map'"
-                        type="button"
-                        (click)="openAddActionModal(activity.id)"
-                        class="text-xs text-indigo-600 hover:text-indigo-800 ml-1"
-                      >
-                        + Add
-                      </button>
+                    <div *ngIf="activity.health" class="activity-health border-t border-gray-200 dark:border-gray-600 pt-1 mt-1">
+                      <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Impl.</span>
+                        <span [class]="getScoreClass(activity.health.score) + ' text-sm font-bold'">
+                          {{ activity.health.score }}
+                        </span>
+                      </div>
+                      <div class="flex items-center gap-2 text-xs">
+                        <span class="text-green-600 dark:text-green-400">{{ activity.health.fullCount }}F</span>
+                        <span class="text-yellow-600 dark:text-yellow-400">{{ activity.health.partialCount }}P</span>
+                        <span class="text-red-600 dark:text-red-400">{{ activity.health.noneCount }}N</span>
+                      </div>
                     </div>
                   </div>
                 </th>
@@ -271,11 +286,18 @@ interface DropdownOption {
           <div class="matrix-treeview">
             <div *ngFor="let activity of uniqueActivities" class="treeview-activity">
               <div class="treeview-activity-header" (click)="toggleActivityExpanded(activity.id)">
-                <div>
+                <div class="flex-1">
                   <div class="treeview-activity-name dark:text-white">{{ activity.name }}</div>
                   <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400">
                     {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
                   </p>
+                  <div *ngIf="activity.health" class="flex items-center gap-3 mt-1 text-xs">
+                    <span class="text-gray-500 dark:text-gray-400">Impl.</span>
+                    <span [class]="getScoreClass(activity.health.score) + ' font-bold'">{{ activity.health.score }}</span>
+                    <span class="text-green-600 dark:text-green-400">{{ activity.health.fullCount }}F</span>
+                    <span class="text-yellow-600 dark:text-yellow-400">{{ activity.health.partialCount }}P</span>
+                    <span class="text-red-600 dark:text-red-400">{{ activity.health.noneCount }}N</span>
+                  </div>
                 </div>
                 <div class="flex items-center gap-2">
                   <button
