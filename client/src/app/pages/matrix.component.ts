@@ -315,11 +315,15 @@ interface DropdownOption {
                       class="treeview-action"
                       (click)="openActionModal(action)"
                     >
-                      <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
-                      <span class="treeview-action-name font-medium">{{ action.name }}</span>
-                      <span *ngIf="showActorBadges" class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
-                        {{ action.actor_name || '-' }}
-                      </span>
+                      <div class="treeview-action-header">
+                        <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
+                        <span class="treeview-action-name font-medium">{{ action.name }}</span>
+                      </div>
+                      <div *ngIf="showActorBadges && action.actor_name" class="treeview-action-meta">
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                          {{ action.actor_name }}
+                        </span>
+                      </div>
                     </div>
                     <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-400 text-sm text-center py-2">
                       No actions
