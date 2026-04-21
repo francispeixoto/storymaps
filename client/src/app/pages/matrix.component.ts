@@ -255,7 +255,7 @@ interface DropdownOption {
                           {{ getMapName(action.map_id) }}
                         </span>
                       </div>
-                      <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs pl-3">{{ action.description }}</p>
+                      <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs pl-3">{{ action.description.length > 150 ? action.description.slice(0, 150) + '...' : action.description }}</p>
                       <div *ngIf="outputsMap.get(action.id)" class="absolute right-0 translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Is prerequisite for other actions"></div>
                     </div>
                     <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-300 text-sm">
@@ -273,8 +273,8 @@ interface DropdownOption {
               <div class="treeview-activity-header" (click)="toggleActivityExpanded(activity.id)">
                 <div>
                   <div class="treeview-activity-name dark:text-white">{{ activity.name }}</div>
-                  <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                    {{ activity.description }}
+                  <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
                   </p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -1037,7 +1037,8 @@ export class MatrixComponent implements OnInit, OnChanges {
       }
       return count > 0 ? `${count} action${count !== 1 ? 's' : ''}` : '';
     }
-    return this.currentMap?.description || '';
+    const desc = this.currentMap?.description || '';
+    return desc.length > 150 ? desc.slice(0, 150) + '...' : desc;
   }
 
   get hasHealthData(): boolean {
