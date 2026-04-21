@@ -55,20 +55,12 @@ import { Actor, ActorAction } from '../models';
           <p *ngIf="actor.action_count" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {{ actor.action_count }} action{{ actor.action_count !== 1 ? 's' : '' }}
           </p>
-          <div (click)="$event.preventDefault(); $event.stopPropagation()" class="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <button
-              (click)="openEditModal(actor)"
-              class="text-xs text-gray-500 hover:text-indigo-600"
-            >
-              Edit
-            </button>
-            <button
-              (click)="openDeleteModal(actor)"
-              class="text-xs text-gray-500 hover:text-red-600"
-            >
-              Delete
-            </button>
-          </div>
+          <button
+            (click)="openEditModal(actor)"
+            class="text-xs text-gray-500 hover:text-indigo-600 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700"
+          >
+            Edit
+          </button>
         </a>
       </div>
     </div>
@@ -107,9 +99,12 @@ import { Actor, ActorAction } from '../models';
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
             <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 px-3 py-2 border bg-white dark:bg-gray-700 dark:text-gray-100"></textarea>
           </div>
-          <div class="flex justify-end gap-2">
-            <button type="button" (click)="showEditModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
-            <button type="submit" [disabled]="editActorForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
+          <div class="flex justify-between items-center">
+            <button type="button" (click)="openDeleteFromEdit()" class="text-sm text-red-600 hover:text-red-800">Delete Actor</button>
+            <div class="flex gap-2">
+              <button type="button" (click)="showEditModal = false" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded">Cancel</button>
+              <button type="submit" [disabled]="editActorForm.invalid" class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Save</button>
+            </div>
           </div>
         </form>
       </div>
@@ -277,6 +272,15 @@ export class ActorsPageComponent implements OnInit {
       },
       error: (err) => console.error('Error loading actor actions:', err)
     });
+  }
+
+  openDeleteFromEdit(): void {
+    const actorId = (this as any).editingActorId;
+    const actor = this.actors.find(a => a.id === actorId);
+    if (actor) {
+      this.showEditModal = false;
+      this.openDeleteModal(actor);
+    }
   }
 
   cancelDelete(): void {
