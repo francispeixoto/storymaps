@@ -74,12 +74,7 @@
 .matrix-table {
   width: 100%;
   border-collapse: collapse;
-}
-
-@media (min-width: 768px) {
-  .matrix-table {
-    table-layout: fixed;
-  }
+  table-layout: auto;
 }
 
 .matrix-thead {
