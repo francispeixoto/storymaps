@@ -203,18 +203,18 @@ interface DropdownOption {
                         {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
                       </p>
                     </div>
-                    <div *ngIf="activity.health" class="flex items-center justify-between mb-1">
+                    <div *ngIf="getActivityHealth(activity)" class="flex items-center justify-between mb-1">
                       <span class="text-xs text-gray-500 dark:text-gray-400">Impl.</span>
-                      <span [class]="getScoreClass(activity.health.score) + ' text-sm font-bold'">
-                        {{ activity.health.score }}
+                      <span [class]="getScoreClass(getActivityHealth(activity)!.score) + ' text-sm font-bold'">
+                        {{ getActivityHealth(activity)!.score }}
                       </span>
                     </div>
-                    <div *ngIf="activity.health" class="flex items-center gap-2 text-xs mb-1">
-                      <span class="text-green-600 dark:text-green-400">{{ activity.health.fullCount }}F</span>
-                      <span class="text-yellow-600 dark:text-yellow-400">{{ activity.health.partialCount }}P</span>
-                      <span class="text-red-600 dark:text-red-400">{{ activity.health.noneCount }}N</span>
+                    <div *ngIf="getActivityHealth(activity)" class="flex items-center gap-2 text-xs mb-1">
+                      <span class="text-green-600 dark:text-green-400">{{ getActivityHealth(activity)!.fullCount }}F</span>
+                      <span class="text-yellow-600 dark:text-yellow-400">{{ getActivityHealth(activity)!.partialCount }}P</span>
+                      <span class="text-red-600 dark:text-red-400">{{ getActivityHealth(activity)!.noneCount }}N</span>
                     </div>
-                    <div *ngIf="viewMode === 'map'" class="flex justify-center gap-2 border-t border-gray-200 dark:border-gray-600 pt-1 mt-1">
+                    <div *ngIf="currentMap" class="flex justify-center gap-2 border-t border-gray-200 dark:border-gray-600 pt-1 mt-1">
                       <button
                         type="button"
                         (click)="openEditActivityModal(activity)"
@@ -285,17 +285,17 @@ interface DropdownOption {
                   <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400">
                     {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
                   </p>
-                  <div *ngIf="activity.health" class="flex items-center gap-3 mt-1 text-xs">
+                  <div *ngIf="getActivityHealth(activity)" class="flex items-center gap-3 mt-1 text-xs">
                     <span class="text-gray-500 dark:text-gray-400">Impl.</span>
-                    <span [class]="getScoreClass(activity.health.score) + ' font-bold'">{{ activity.health.score }}</span>
-                    <span class="text-green-600 dark:text-green-400">{{ activity.health.fullCount }}F</span>
-                    <span class="text-yellow-600 dark:text-yellow-400">{{ activity.health.partialCount }}P</span>
-                    <span class="text-red-600 dark:text-red-400">{{ activity.health.noneCount }}N</span>
+                    <span [class]="getScoreClass(getActivityHealth(activity)!.score) + ' font-bold'">{{ getActivityHealth(activity)!.score }}</span>
+                    <span class="text-green-600 dark:text-green-400">{{ getActivityHealth(activity)!.fullCount }}F</span>
+                    <span class="text-yellow-600 dark:text-yellow-400">{{ getActivityHealth(activity)!.partialCount }}P</span>
+                    <span class="text-red-600 dark:text-red-400">{{ getActivityHealth(activity)!.noneCount }}N</span>
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
                   <button
-                    *ngIf="viewMode === 'map'"
+                    *ngIf="currentMap"
                     type="button"
                     (click)="$event.stopPropagation(); openAddActionModal(activity.id)"
                     class="text-xs text-indigo-600 hover:text-indigo-800"
@@ -1010,6 +1010,7 @@ export class MatrixComponent implements OnInit, OnChanges {
             name: action.activity_name || '',
             description: action.activity_description,
             map_id: action.map_id || 0,
+            health: this.calculateActivityHealth(action.activity_id) || undefined,
             created_at: '',
             updated_at: ''
           });
@@ -1019,6 +1020,46 @@ export class MatrixComponent implements OnInit, OnChanges {
     }
     
     return [];
+  }
+
+  calculateActivityHealth(activityId: number): MapHealth | null {
+    const activityActions = this.filteredActions.filter(a => a.activity_id === activityId);
+    if (activityActions.length === 0) return null;
+
+    const byPriority: { [key: string]: { full: number; partial: number; none: number; total: number; score: number } } = {};
+    let fullCount = 0, partialCount = 0, noneCount = 0;
+    let weightedScore = 0, totalWeight = 0;
+
+    for (const priority of this.priorities) {
+      const priorityActions = activityActions.filter(a => a.priority === priority);
+      const full = priorityActions.filter(a => a.implementation_state === 'Full').length;
+      const partial = priorityActions.filter(a => a.implementation_state === 'Partial').length;
+      const none = priorityActions.filter(a => a.implementation_state === 'None').length;
+      const total = full + partial + none;
+
+      let score = 0;
+      if (total > 0) {
+        const weight = priority === 'Need' ? 3 : priority === 'Want' ? 2 : 1;
+        weightedScore += (full + partial * 0.5) * weight;
+        totalWeight += total * weight;
+        score = Math.round(((full + partial * 0.5) / total) * 100);
+      }
+
+      byPriority[priority] = { full, partial, none, total, score };
+      fullCount += full;
+      partialCount += partial;
+      noneCount += none;
+    }
+
+    const score = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : 0;
+
+    return { score, totalActions: activityActions.length, fullCount, partialCount, noneCount, byPriority };
+  }
+
+  getActivityHealth(activity: Activity): MapHealth | null {
+    if (activity.health) return activity.health;
+    if (this.viewMode === 'actor') return this.calculateActivityHealth(activity.id);
+    return null;
   }
 
   get showActorFilter(): boolean {
