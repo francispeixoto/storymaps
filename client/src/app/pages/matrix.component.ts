@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -264,6 +264,71 @@ interface DropdownOption {
               </tr>
             </tbody>
           </table>
+
+          <!-- Mobile Treeview -->
+          <div class="matrix-treeview">
+            <div *ngFor="let activity of uniqueActivities" class="treeview-activity">
+              <div class="treeview-activity-header" (click)="toggleActivityExpanded(activity.id)">
+                <div>
+                  <div class="treeview-activity-name dark:text-white">{{ activity.name }}</div>
+                  <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                    {{ activity.description }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    *ngIf="viewMode === 'map'"
+                    type="button"
+                    (click)="$event.stopPropagation(); openAddActionModal(activity.id)"
+                    class="text-xs text-indigo-600 hover:text-indigo-800"
+                    title="Add action"
+                  >
+                    + Add
+                  </button>
+                  <span class="treeview-activity-toggle dark:text-gray-400">
+                    {{ isActivityExpanded(activity.id) ? '▼' : '▶' }}
+                  </span>
+                </div>
+              </div>
+              <div *ngIf="isActivityExpanded(activity.id)" class="treeview-priority-list">
+                <div *ngFor="let priority of priorities" class="treeview-priority">
+                  <div 
+                    class="treeview-priority-header" 
+                    (click)="togglePriorityExpanded(activity.id, priority)"
+                    [class.opacity-50]="getActions(activity.id, priority).length === 0"
+                  >
+                    <div class="flex items-center gap-2">
+                      <span [class]="getPriorityClass(priority) + ' px-2 py-0.5 text-xs font-medium rounded'">
+                        {{ priority }}
+                      </span>
+                      <span class="treeview-priority-actions-count">
+                        ({{ getActions(activity.id, priority).length }})
+                      </span>
+                    </div>
+                    <span class="treeview-priority-toggle text-gray-400">
+                      {{ isPriorityExpanded(activity.id, priority) ? '▼' : '▶' }}
+                    </span>
+                  </div>
+                  <div *ngIf="isPriorityExpanded(activity.id, priority)" class="treeview-actions">
+                    <div
+                      *ngFor="let action of getActions(activity.id, priority)"
+                      class="treeview-action"
+                      (click)="openActionModal(action)"
+                    >
+                      <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
+                      <span class="treeview-action-name font-medium">{{ action.name }}</span>
+                      <span *ngIf="showActorBadges" class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                        {{ action.actor_name || '-' }}
+                      </span>
+                    </div>
+                    <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-400 text-sm text-center py-2">
+                      No actions
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -590,6 +655,17 @@ export class MatrixComponent implements OnInit, OnChanges {
   
   actorId: number | null = null;
 
+  windowWidth = window.innerWidth;
+  isMobile = false;
+  expandedActivities = new Map<number, boolean>();
+  expandedPriorities = new Map<string, boolean>();
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event): void {
+    this.windowWidth = (event.target as Window).innerWidth;
+    this.updateIsMobile();
+  }
+
   constructor(
     private mapService: MapService,
     private actorService: ActorService,
@@ -605,6 +681,11 @@ export class MatrixComponent implements OnInit, OnChanges {
     this.initForms();
     this.initStateOptions();
     this.detectViewMode();
+    this.updateIsMobile();
+  }
+
+  updateIsMobile(): void {
+    this.isMobile = this.windowWidth < 768;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -771,9 +852,53 @@ export class MatrixComponent implements OnInit, OnChanges {
       next: (actions) => {
         this.actions = actions;
         this.loadDependencyIndicators(actions);
+        this.initializeTreeviewExpansion();
       },
       error: (err) => console.error('Error loading actions:', err)
     });
+  }
+
+  initializeTreeviewExpansion(): void {
+    this.expandedActivities.clear();
+    this.expandedPriorities.clear();
+    
+    for (const activity of this.uniqueActivities) {
+      let firstNonEmptyPriority: string | null = null;
+      for (const priority of this.priorities) {
+        const key = `${activity.id}-${priority}`;
+        const hasActions = this.getActions(activity.id, priority).length > 0;
+        if (hasActions && !firstNonEmptyPriority) {
+          firstNonEmptyPriority = priority;
+          this.expandedPriorities.set(key, true);
+        } else {
+          this.expandedPriorities.set(key, false);
+        }
+      }
+      if (firstNonEmptyPriority) {
+        this.expandedActivities.set(activity.id, true);
+      } else {
+        this.expandedActivities.set(activity.id, false);
+      }
+    }
+  }
+
+  isActivityExpanded(activityId: number): boolean {
+    return this.expandedActivities.get(activityId) ?? false;
+  }
+
+  isPriorityExpanded(activityId: number, priority: string): boolean {
+    return this.expandedPriorities.get(`${activityId}-${priority}`) ?? false;
+  }
+
+  toggleActivityExpanded(activityId: number): void {
+    const current = this.expandedActivities.get(activityId) ?? false;
+    this.expandedActivities.set(activityId, !current);
+  }
+
+  togglePriorityExpanded(activityId: number, priority: string): void {
+    const key = `${activityId}-${priority}`;
+    const current = this.expandedPriorities.get(key) ?? false;
+    this.expandedPriorities.set(key, !current);
   }
 
   loadDependencyIndicators(actions: ActionWithContext[]): void {
