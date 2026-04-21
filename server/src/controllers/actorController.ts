@@ -111,7 +111,25 @@ export const deleteActor = (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Actor not found' });
     return;
   }
-  db.prepare('DELETE FROM actors WHERE id = ?').run(req.params.id);
+
+  const actorId = Number(req.params.id);
+  const { reassignTo } = req.body;
+
+  if (reassignTo) {
+    const newActorId = Number(reassignTo);
+    const targetExists = db.prepare('SELECT id FROM actors WHERE id = ?').get(newActorId);
+    if (!targetExists) {
+      res.status(400).json({ error: 'Target actor not found' });
+      return;
+    }
+    if (newActorId === actorId) {
+      res.status(400).json({ error: 'Cannot reassign to same actor' });
+      return;
+    }
+    db.prepare('UPDATE actions SET actor_id = ? WHERE actor_id = ?').run(newActorId, actorId);
+  }
+
+  db.prepare('DELETE FROM actors WHERE id = ?').run(actorId);
   res.status(204).send();
 };
 

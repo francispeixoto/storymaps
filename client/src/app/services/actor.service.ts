@@ -33,7 +33,10 @@ export class ActorService {
     return this.http.put<Actor>(`${this.apiUrl}/${id}`, actor);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: number, reassignTo?: number): Observable<void> {
+    if (reassignTo !== undefined) {
+      return this.http.delete<void>(`${this.apiUrl}/${id}`, { body: { reassignTo } });
+    }
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
