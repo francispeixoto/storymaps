@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { ActorService } from '../services/actor.service';
 import { ToastService } from '../services/toast.service';
 import { Actor, ActorAction } from '../models';
@@ -8,7 +9,7 @@ import { Actor, ActorAction } from '../models';
 @Component({
   selector: 'app-actors-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
   template: `
     <div>
       <div class="flex justify-between items-center mb-6">
@@ -35,7 +36,11 @@ import { Actor, ActorAction } from '../models';
       </div>
 
       <div *ngIf="actors.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div *ngFor="let actor of actors" class="block bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors">
+        <a
+          *ngFor="let actor of actors"
+          [routerLink]="['/actors', actor.id]"
+          class="block bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 cursor-pointer transition-colors"
+        >
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ actor.name }}</h3>
@@ -50,7 +55,7 @@ import { Actor, ActorAction } from '../models';
           <p *ngIf="actor.action_count" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {{ actor.action_count }} action{{ actor.action_count !== 1 ? 's' : '' }}
           </p>
-          <div class="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div (click)="$event.preventDefault(); $event.stopPropagation()" class="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <button
               (click)="openEditModal(actor)"
               class="text-xs text-gray-500 hover:text-indigo-600"
@@ -64,7 +69,7 @@ import { Actor, ActorAction } from '../models';
               Delete
             </button>
           </div>
-        </div>
+        </a>
       </div>
     </div>
 
