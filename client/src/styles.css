@@ -61,8 +61,6 @@
 /* Matrix container styles */
 .matrix-container {
   position: relative;
-  overflow: hidden;
-  max-height: 70vh;
   background: var(--matrix-bg);
   border-radius: 0.5rem;
   border: 1px solid var(--border-color);
@@ -70,14 +68,13 @@
 }
 
 .matrix-scroll-content {
-  overflow: auto;
-  max-height: 70vh;
+  overflow: visible;
 }
 
 .matrix-table {
   width: 100%;
-  min-width: 600px;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .matrix-thead {
@@ -101,7 +98,6 @@
   font-weight: 500;
   color: var(--text-primary);
   border-left: 1px solid var(--border-color);
-  white-space: nowrap;
   background: var(--matrix-header-bg);
   z-index: 5;
 }
@@ -110,8 +106,8 @@
   position: sticky;
   top: 0;
   left: 0;
-  width: 80px;
-  min-width: 80px;
+  width: 70px;
+  min-width: 70px;
   padding: 0.75rem;
   background: var(--matrix-header-bg);
   z-index: 15;
@@ -128,8 +124,8 @@
 .matrix-row-header {
   position: sticky;
   left: 0;
-  width: 80px;
-  min-width: 80px;
+  width: 70px;
+  min-width: 70px;
   padding: 0.75rem;
   background: var(--matrix-bg);
   font-weight: 500;
@@ -152,4 +148,135 @@
   background: var(--action-card-bg);
   font-size: 0.875rem;
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile Treeview Styles */
+@media (max-width: 767px) {
+  .matrix-container {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .matrix-scroll-content {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .matrix-table,
+  .matrix-thead {
+    display: none;
+  }
+}
+
+.matrix-treeview {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .matrix-treeview {
+    display: block;
+  }
+}
+
+.treeview-activity {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--matrix-bg);
+  overflow: hidden;
+}
+
+.treeview-activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--matrix-header-bg);
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.treeview-activity-name {
+  font-size: 1rem;
+}
+
+.treeview-activity-toggle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.treeview-priority {
+  border-top: 1px solid var(--border-color);
+}
+
+.treeview-priority-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  transition: background-color 0.15s;
+}
+
+.treeview-priority-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.treeview-priority-actions-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.treeview-priority-toggle {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  margin-left: 0.5rem;
+}
+
+.treeview-actions {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+}
+
+.treeview-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+  background: var(--action-card-bg);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.treeview-action:last-child {
+  margin-bottom: 0;
+}
+
+.treeview-action-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.treeview-action-name {
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.treeview-action-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,10 +25,9 @@ interface DropdownOption {
   imports: [CommonModule, FormsModule, ReactiveFormsModule, ConfirmDeleteDialogComponent],
   template: `
     <div class="max-w-full mx-auto">
-      <div class="flex justify-between items-center mb-6">
-        <div>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div class="flex-1">
           <h2 class="text-2xl font-bold dark:text-white">{{ pageTitle }}</h2>
-          <p *ngIf="pageSubtitle" class="text-gray-600 dark:text-gray-300 mt-1">{{ pageSubtitle }}</p>
         </div>
         <div class="flex gap-2">
           <button
@@ -53,6 +52,7 @@ interface DropdownOption {
           </button>
         </div>
       </div>
+      <p *ngIf="pageSubtitle" class="text-gray-600 dark:text-gray-300 mb-6">{{ pageSubtitle }}</p>
 
       <div *ngIf="hasHealthData && displayHealth" class="max-w-full mx-auto mb-6 p-4 bg-indigo-50 dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-3">
@@ -196,16 +196,26 @@ interface DropdownOption {
               <tr>
                 <th class="matrix-corner"></th>
                 <th *ngFor="let activity of uniqueActivities" class="matrix-header-col">
-                  <div class="flex items-center justify-between">
-                    <div>
+                  <div class="flex flex-col">
+                    <div class="mb-1">
                       <span class="dark:text-white">{{ activity.name }}</span>
-                      <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]" [title]="activity.description">
+                      <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400">
                         {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
                       </p>
                     </div>
-                    <div class="flex items-center gap-1">
+                    <div *ngIf="getActivityHealth(activity)" class="flex items-center justify-between mb-1">
+                      <span class="text-xs text-gray-500 dark:text-gray-400">Impl.</span>
+                      <span [class]="getScoreClass(getActivityHealth(activity)!.score) + ' text-sm font-bold'">
+                        {{ getActivityHealth(activity)!.score }}
+                      </span>
+                    </div>
+                    <div *ngIf="getActivityHealth(activity)" class="flex items-center gap-2 text-xs mb-1">
+                      <span class="text-green-600 dark:text-green-400">{{ getActivityHealth(activity)!.fullCount }}F</span>
+                      <span class="text-yellow-600 dark:text-yellow-400">{{ getActivityHealth(activity)!.partialCount }}P</span>
+                      <span class="text-red-600 dark:text-red-400">{{ getActivityHealth(activity)!.noneCount }}N</span>
+                    </div>
+                    <div *ngIf="currentMap" class="flex justify-center gap-2 border-t border-gray-200 dark:border-gray-600 pt-1 mt-1">
                       <button
-                        *ngIf="viewMode === 'map'"
                         type="button"
                         (click)="openEditActivityModal(activity)"
                         class="text-xs text-gray-400 hover:text-gray-600"
@@ -216,10 +226,9 @@ interface DropdownOption {
                         </svg>
                       </button>
                       <button
-                        *ngIf="viewMode === 'map'"
                         type="button"
                         (click)="openAddActionModal(activity.id)"
-                        class="text-xs text-indigo-600 hover:text-indigo-800 ml-1"
+                        class="text-xs text-indigo-600 hover:text-indigo-800"
                       >
                         + Add
                       </button>
@@ -245,15 +254,17 @@ interface DropdownOption {
                       <div *ngIf="inputsMap.get(action.id)" class="absolute left-0 -translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Has incoming dependencies"></div>
                       <div class="flex items-center gap-2 pl-3">
                         <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
-                        <span class="font-medium flex-1 truncate">{{ action.name }}</span>
-                        <span *ngIf="showActorBadges" class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800 flex-shrink-0">
-                          {{ action.actor_name || '-' }}
+                        <span class="font-medium flex-1 word-wrap break-word overflow-wrap-break-word">{{ action.name }}</span>
+                      </div>
+                      <div *ngIf="showActorBadges && action.actor_name" class="flex items-center gap-2 pl-3 mt-1">
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                          {{ action.actor_name }}
                         </span>
-                        <span *ngIf="showMapBadges" class="px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-800 flex-shrink-0">
+                        <span *ngIf="showMapBadges" class="px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-800">
                           {{ getMapName(action.map_id) }}
                         </span>
                       </div>
-                      <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs pl-3">{{ action.description }}</p>
+                      <p *ngIf="action.description" class="mt-1 text-gray-500 text-xs pl-3">{{ action.description.length > 150 ? action.description.slice(0, 150) + '...' : action.description }}</p>
                       <div *ngIf="outputsMap.get(action.id)" class="absolute right-0 translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Is prerequisite for other actions"></div>
                     </div>
                     <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-300 text-sm">
@@ -264,6 +275,82 @@ interface DropdownOption {
               </tr>
             </tbody>
           </table>
+
+          <!-- Mobile Treeview -->
+          <div class="matrix-treeview">
+            <div *ngFor="let activity of uniqueActivities" class="treeview-activity">
+              <div class="treeview-activity-header" (click)="toggleActivityExpanded(activity.id)">
+                <div class="flex-1">
+                  <div class="treeview-activity-name dark:text-white">{{ activity.name }}</div>
+                  <p *ngIf="activity.description" class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ activity.description.length > 150 ? activity.description.slice(0, 150) + '...' : activity.description }}
+                  </p>
+                  <div *ngIf="getActivityHealth(activity)" class="flex items-center gap-3 mt-1 text-xs">
+                    <span class="text-gray-500 dark:text-gray-400">Impl.</span>
+                    <span [class]="getScoreClass(getActivityHealth(activity)!.score) + ' font-bold'">{{ getActivityHealth(activity)!.score }}</span>
+                    <span class="text-green-600 dark:text-green-400">{{ getActivityHealth(activity)!.fullCount }}F</span>
+                    <span class="text-yellow-600 dark:text-yellow-400">{{ getActivityHealth(activity)!.partialCount }}P</span>
+                    <span class="text-red-600 dark:text-red-400">{{ getActivityHealth(activity)!.noneCount }}N</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    *ngIf="currentMap"
+                    type="button"
+                    (click)="$event.stopPropagation(); openAddActionModal(activity.id)"
+                    class="text-xs text-indigo-600 hover:text-indigo-800"
+                    title="Add action"
+                  >
+                    + Add
+                  </button>
+                  <span class="treeview-activity-toggle dark:text-gray-400">
+                    {{ isActivityExpanded(activity.id) ? '▼' : '▶' }}
+                  </span>
+                </div>
+              </div>
+              <div *ngIf="isActivityExpanded(activity.id)" class="treeview-priority-list">
+                <div *ngFor="let priority of priorities" class="treeview-priority">
+                  <div 
+                    class="treeview-priority-header" 
+                    (click)="togglePriorityExpanded(activity.id, priority)"
+                    [class.opacity-50]="getActions(activity.id, priority).length === 0"
+                  >
+                    <div class="flex items-center gap-2">
+                      <span [class]="getPriorityClass(priority) + ' px-2 py-0.5 text-xs font-medium rounded'">
+                        {{ priority }}
+                      </span>
+                      <span class="treeview-priority-actions-count">
+                        ({{ getActions(activity.id, priority).length }})
+                      </span>
+                    </div>
+                    <span class="treeview-priority-toggle text-gray-400">
+                      {{ isPriorityExpanded(activity.id, priority) ? '▼' : '▶' }}
+                    </span>
+                  </div>
+                  <div *ngIf="isPriorityExpanded(activity.id, priority)" class="treeview-actions">
+                    <div
+                      *ngFor="let action of getActions(activity.id, priority)"
+                      class="treeview-action"
+                      (click)="openActionModal(action)"
+                    >
+                      <div class="treeview-action-header">
+                        <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
+                        <span class="treeview-action-name font-medium">{{ action.name }}</span>
+                      </div>
+                      <div *ngIf="showActorBadges && action.actor_name" class="treeview-action-meta">
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                          {{ action.actor_name }}
+                        </span>
+                      </div>
+                    </div>
+                    <div *ngIf="getActions(activity.id, priority).length === 0" class="text-gray-400 text-sm text-center py-2">
+                      No actions
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -590,6 +677,17 @@ export class MatrixComponent implements OnInit, OnChanges {
   
   actorId: number | null = null;
 
+  windowWidth = window.innerWidth;
+  isMobile = false;
+  expandedActivities = new Map<number, boolean>();
+  expandedPriorities = new Map<string, boolean>();
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event): void {
+    this.windowWidth = (event.target as Window).innerWidth;
+    this.updateIsMobile();
+  }
+
   constructor(
     private mapService: MapService,
     private actorService: ActorService,
@@ -605,6 +703,11 @@ export class MatrixComponent implements OnInit, OnChanges {
     this.initForms();
     this.initStateOptions();
     this.detectViewMode();
+    this.updateIsMobile();
+  }
+
+  updateIsMobile(): void {
+    this.isMobile = this.windowWidth < 768;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -771,9 +874,53 @@ export class MatrixComponent implements OnInit, OnChanges {
       next: (actions) => {
         this.actions = actions;
         this.loadDependencyIndicators(actions);
+        this.initializeTreeviewExpansion();
       },
       error: (err) => console.error('Error loading actions:', err)
     });
+  }
+
+  initializeTreeviewExpansion(): void {
+    this.expandedActivities.clear();
+    this.expandedPriorities.clear();
+    
+    for (const activity of this.uniqueActivities) {
+      let firstNonEmptyPriority: string | null = null;
+      for (const priority of this.priorities) {
+        const key = `${activity.id}-${priority}`;
+        const hasActions = this.getActions(activity.id, priority).length > 0;
+        if (hasActions && !firstNonEmptyPriority) {
+          firstNonEmptyPriority = priority;
+          this.expandedPriorities.set(key, true);
+        } else {
+          this.expandedPriorities.set(key, false);
+        }
+      }
+      if (firstNonEmptyPriority) {
+        this.expandedActivities.set(activity.id, true);
+      } else {
+        this.expandedActivities.set(activity.id, false);
+      }
+    }
+  }
+
+  isActivityExpanded(activityId: number): boolean {
+    return this.expandedActivities.get(activityId) ?? false;
+  }
+
+  isPriorityExpanded(activityId: number, priority: string): boolean {
+    return this.expandedPriorities.get(`${activityId}-${priority}`) ?? false;
+  }
+
+  toggleActivityExpanded(activityId: number): void {
+    const current = this.expandedActivities.get(activityId) ?? false;
+    this.expandedActivities.set(activityId, !current);
+  }
+
+  togglePriorityExpanded(activityId: number, priority: string): void {
+    const key = `${activityId}-${priority}`;
+    const current = this.expandedPriorities.get(key) ?? false;
+    this.expandedPriorities.set(key, !current);
   }
 
   loadDependencyIndicators(actions: ActionWithContext[]): void {
@@ -863,6 +1010,7 @@ export class MatrixComponent implements OnInit, OnChanges {
             name: action.activity_name || '',
             description: action.activity_description,
             map_id: action.map_id || 0,
+            health: this.calculateActivityHealth(action.activity_id) || undefined,
             created_at: '',
             updated_at: ''
           });
@@ -872,6 +1020,46 @@ export class MatrixComponent implements OnInit, OnChanges {
     }
     
     return [];
+  }
+
+  calculateActivityHealth(activityId: number): MapHealth | null {
+    const activityActions = this.filteredActions.filter(a => a.activity_id === activityId);
+    if (activityActions.length === 0) return null;
+
+    const byPriority: { [key: string]: { full: number; partial: number; none: number; total: number; score: number } } = {};
+    let fullCount = 0, partialCount = 0, noneCount = 0;
+    let weightedScore = 0, totalWeight = 0;
+
+    for (const priority of this.priorities) {
+      const priorityActions = activityActions.filter(a => a.priority === priority);
+      const full = priorityActions.filter(a => a.implementation_state === 'Full').length;
+      const partial = priorityActions.filter(a => a.implementation_state === 'Partial').length;
+      const none = priorityActions.filter(a => a.implementation_state === 'None').length;
+      const total = full + partial + none;
+
+      let score = 0;
+      if (total > 0) {
+        const weight = priority === 'Need' ? 3 : priority === 'Want' ? 2 : 1;
+        weightedScore += (full + partial * 0.5) * weight;
+        totalWeight += total * weight;
+        score = Math.round(((full + partial * 0.5) / total) * 100);
+      }
+
+      byPriority[priority] = { full, partial, none, total, score };
+      fullCount += full;
+      partialCount += partial;
+      noneCount += none;
+    }
+
+    const score = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : 0;
+
+    return { score, totalActions: activityActions.length, fullCount, partialCount, noneCount, byPriority };
+  }
+
+  getActivityHealth(activity: Activity): MapHealth | null {
+    if (activity.health) return activity.health;
+    if (this.viewMode === 'actor') return this.calculateActivityHealth(activity.id);
+    return null;
   }
 
   get showActorFilter(): boolean {
@@ -906,7 +1094,8 @@ export class MatrixComponent implements OnInit, OnChanges {
       }
       return count > 0 ? `${count} action${count !== 1 ? 's' : ''}` : '';
     }
-    return this.currentMap?.description || '';
+    const desc = this.currentMap?.description || '';
+    return desc.length > 150 ? desc.slice(0, 150) + '...' : desc;
   }
 
   get hasHealthData(): boolean {

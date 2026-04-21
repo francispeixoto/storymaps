@@ -53,6 +53,7 @@ export interface Activity {
   map_id: number;
   name: string;
   description?: string;
+  health?: MapHealth;
   created_at: string;
   updated_at: string;
 }

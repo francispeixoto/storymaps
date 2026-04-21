@@ -1,11 +1,21 @@
 import { Request, Response } from 'express';
 import db from '../models/db';
+import { calculateHealth, MapHealth } from '../utils/health';
 
 export const getAllActivities = (req: Request, res: Response): void => {
   const mapId = req.query.map_id;
   if (mapId) {
-    const activities = db.prepare('SELECT * FROM activities WHERE map_id = ? ORDER BY id').all(mapId);
-    res.json(activities);
+    const activities = db.prepare('SELECT * FROM activities WHERE map_id = ? ORDER BY id').all(mapId) as Array<{ id: number }>;
+    const activitiesWithHealth = activities.map(activity => {
+      const actions = db.prepare(`
+        SELECT a.priority, a.implementation_state
+        FROM actions a
+        WHERE a.activity_id = ?
+      `).all(activity.id) as { priority: string; implementation_state: string }[];
+      const health: MapHealth = calculateHealth(actions);
+      return { ...activity, health };
+    });
+    res.json(activitiesWithHealth);
     return;
   }
   const activities = db.prepare('SELECT * FROM activities ORDER BY id').all();
@@ -18,7 +28,15 @@ export const getActivityById = (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Activity not found' });
     return;
   }
-  res.json(activity);
+
+  const actions = db.prepare(`
+    SELECT a.priority, a.implementation_state
+    FROM actions a
+    WHERE a.activity_id = ?
+  `).all(req.params.id) as { priority: string; implementation_state: string }[];
+
+  const health: MapHealth = calculateHealth(actions);
+  res.json({ ...activity, health });
 };
 
 export const createActivity = (req: Request, res: Response): void => {
