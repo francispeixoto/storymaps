@@ -245,11 +245,13 @@ interface DropdownOption {
                       <div *ngIf="inputsMap.get(action.id)" class="absolute left-0 -translate-x-[5px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-indigo-500" title="Has incoming dependencies"></div>
                       <div class="flex items-center gap-2 pl-3">
                         <span [class]="getImplementationStateDot(action.implementation_state)" class="w-2 h-2 rounded-full flex-shrink-0"></span>
-                        <span class="font-medium flex-1 truncate">{{ action.name }}</span>
-                        <span *ngIf="showActorBadges" class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800 flex-shrink-0">
-                          {{ action.actor_name || '-' }}
+                        <span class="font-medium flex-1 word-wrap break-word overflow-wrap-break-word">{{ action.name }}</span>
+                      </div>
+                      <div *ngIf="showActorBadges && action.actor_name" class="flex items-center gap-2 pl-3 mt-1">
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                          {{ action.actor_name }}
                         </span>
-                        <span *ngIf="showMapBadges" class="px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-800 flex-shrink-0">
+                        <span *ngIf="showMapBadges" class="px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-800">
                           {{ getMapName(action.map_id) }}
                         </span>
                       </div>
