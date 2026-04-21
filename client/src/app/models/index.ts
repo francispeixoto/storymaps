@@ -93,7 +93,9 @@ export interface ActorAction {
   updated_at: string;
   activity_uid: string;
   activity_name: string;
+  activity_description?: string;
   map_uid: string;
+  map_id: number;
   map_name: string;
 }
 
