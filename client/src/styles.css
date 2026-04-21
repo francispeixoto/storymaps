@@ -103,7 +103,6 @@
   font-weight: 500;
   color: var(--text-primary);
   border-left: 1px solid var(--border-color);
-  white-space: nowrap;
   background: var(--matrix-header-bg);
   z-index: 5;
 }
